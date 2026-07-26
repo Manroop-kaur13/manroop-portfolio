@@ -82,7 +82,7 @@ export function InvitationCard({
           <p className="text-sm leading-6 text-gray-200 sm:text-[15px] sm:leading-7">
             Instead of another static portfolio, I&apos;d
             like to take you through my work as a
-            conversation — from projects and technical
+            conversation-from projects and technical
             skills to experience and achievements.
           </p>
 
