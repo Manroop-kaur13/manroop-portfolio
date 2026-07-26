@@ -1,48 +1,7 @@
-import type { ChatType } from "@/types/chat";
-
-
-export type MessageType =
-  | "text"
-  | "contact"
-  | "project-selector"
-  | "project-section"
-  | "skill-card"
-  | "achievement-image"
-  | "education";
-export interface ChatMessage {
-  id: number;
-  type: MessageType;
-  sender: "me" | "other";
-  time: string;
-
-  // Text Message
-  text?: string;
-
-  // Contact Card
-  title?: string;
-  institution?: string;
-duration?: string;
-
-percentage?: string;
-board?: string;
-subjects?: string[];
-
-cgpa?: string;
-coursework?: string[];
-
-emoji?: string;
-skills?: string[];
-
-image?: string;
-caption?: string;
-
-section?: ProjectSection;
-  value?: string;
-  url?: string;
-  buttonText?: string;
-  copy?: boolean;
-  icon?: "email" | "linkedin" | "github" | "leetcode";
-}
+import type {
+  ChatMessage,
+  ChatType,
+} from "@/types/chat";
 
 export interface ChatData {
   title: string;

@@ -1,6 +1,7 @@
 "use client";
 
-import { Github, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { FaGithub } from "react-icons/fa";
 
 interface Props {
   title: string;
@@ -19,7 +20,7 @@ export function GithubCard({
       className="block w-full rounded-xl border border-white/10 bg-[#1f2c33] p-4 transition hover:bg-[#25343d]"
     >
       <div className="flex items-center gap-3">
-        <Github size={24} className="text-white" />
+        <FaGithub size={24} className="text-white" />
 
         <div className="flex-1">
           <h3 className="font-semibold text-white">
