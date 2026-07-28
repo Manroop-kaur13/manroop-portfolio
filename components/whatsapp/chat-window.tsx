@@ -10,17 +10,18 @@ import {
 } from "react";
 
 import {
-  Mail,
   ArrowLeft,
-  MoreVertical,
   FileText,
+  Mail,
+  MoonStar,
+  MoreVertical,
+  UserRound,
 } from "lucide-react";
 
 import { SiLeetcode } from "react-icons/si";
-
 import {
-  FaLinkedin,
   FaGithub,
+  FaLinkedin,
 } from "react-icons/fa";
 
 import { projects } from "@/data/projects";
@@ -28,12 +29,14 @@ import { portfolio } from "@/data/portfolio";
 
 import { MessageRenderer } from "./message-renderer";
 
+import type { FeatureType } from "./feature-nav";
 import type { ChatType } from "@/types/chat";
 
 interface Props {
   chat: ChatType;
   onBack: () => void;
   isReopening: boolean;
+  onFeatureSelect: (feature: FeatureType) => void;
 }
 
 const chatAvatars: Record<ChatType, string> = {
@@ -41,9 +44,12 @@ const chatAvatars: Record<ChatType, string> = {
   education: "/images/avatars/education.jpg",
   skills: "/images/avatars/skills.jpeg",
   projects: "/images/avatars/projects.jpg",
-  experience: "/images/avatars/experience-avatar.jpg",
-  achievements: "/images/avatars/achievements.jpg",
-  certificates: "/images/avatars/certificate.jpg",
+  experience:
+    "/images/avatars/experience-avatar.jpg",
+  achievements:
+    "/images/avatars/achievements.jpg",
+  certificates:
+    "/images/avatars/certificate.jpg",
   resume: "/images/avatars/resume.jpg",
   contact: "/images/avatars/contact.jpeg",
 };
@@ -60,6 +66,7 @@ export function ChatWindow({
   chat,
   onBack,
   isReopening,
+  onFeatureSelect,
 }: Props) {
   const currentChat = portfolio[chat];
 
@@ -79,11 +86,17 @@ export function ChatWindow({
     Record<number, string>
   >({});
 
-  const messagesEndRef =
+  const scrollContainerRef =
     useRef<HTMLDivElement | null>(null);
 
   const projectStartRef =
     useRef<HTMLDivElement | null>(null);
+
+  /*
+   * Once the user manually scrolls away from
+   * the bottom, automatic message scrolling stops.
+   */
+  const userScrolledAwayRef = useRef(false);
 
   const selectedProject = useMemo(
     () =>
@@ -94,19 +107,46 @@ export function ChatWindow({
     [selectedProjectId]
   );
 
+  const scrollToBottom = (
+    behavior: ScrollBehavior = "auto"
+  ) => {
+    const container = scrollContainerRef.current;
+
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior,
+    });
+  };
+
   /*
-   * Message reveal system
-   *
-   * First open:
-   * - recruiter message -> typing indicator -> message
-   * - my message -> short natural pause -> message
-   *
-   * Reopen:
-   * - show everything instantly
+   * Detect whether the user has moved away
+   * from the bottom of the conversation.
+   */
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+
+    if (!container) return;
+
+    const distanceFromBottom =
+      container.scrollHeight -
+      container.scrollTop -
+      container.clientHeight;
+
+    userScrolledAwayRef.current =
+      distanceFromBottom > 120;
+  };
+
+  /*
+   * Reveal conversation.
    */
   useEffect(() => {
     setSelectedProjectId(null);
+    setMenuOpen(false);
     setIsTyping(false);
+
+    userScrolledAwayRef.current = false;
 
     const messages = currentChat.messages;
 
@@ -116,34 +156,28 @@ export function ChatWindow({
       return;
     }
 
-    /*
-     * Reopened chat:
-     * everything has already been read.
-     */
     if (isReopening) {
       setVisibleMessages(messages.length);
       return;
     }
 
-    /*
-     * First opening.
-     */
     setVisibleMessages(0);
     setMessageTimes({});
 
     let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout>;
+    let timeoutId:
+      | ReturnType<typeof setTimeout>
+      | undefined;
 
     const wait = (duration: number) =>
       new Promise<void>((resolve) => {
-        timeoutId = setTimeout(resolve, duration);
+        timeoutId = setTimeout(
+          resolve,
+          duration
+        );
       });
 
     const revealConversation = async () => {
-      /*
-       * Small pause after opening the chat
-       * before conversation starts.
-       */
       await wait(450);
 
       for (
@@ -155,9 +189,6 @@ export function ChatWindow({
 
         const message = messages[index];
 
-        /*
-         * Recruiter / other person is typing.
-         */
         if (message.sender === "other") {
           setIsTyping(true);
 
@@ -167,9 +198,6 @@ export function ChatWindow({
 
           setIsTyping(false);
         } else {
-          /*
-           * Natural pause before my next message.
-           */
           await wait(700);
 
           if (cancelled) return;
@@ -182,19 +210,18 @@ export function ChatWindow({
 
         setVisibleMessages(index + 1);
 
-        /*
-         * Small pause before next message.
-         */
         await wait(300);
       }
     };
 
-    revealConversation();
+    void revealConversation();
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
-      setIsTyping(false);
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [
     chat,
@@ -203,55 +230,53 @@ export function ChatWindow({
   ]);
 
   /*
-   * Auto-scroll while first-time messages appear.
+   * Auto-scroll while messages reveal, but
+   * only while the user remains near bottom.
+   *
+   * We scroll the chat container itself rather
+   * than using scrollIntoView(), which can move
+   * outer page/viewport on mobile Safari.
    */
   useEffect(() => {
     if (visibleMessages === 0) return;
 
+    if (userScrolledAwayRef.current) return;
+
     const timeout = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({
-        behavior: isReopening
-          ? "instant"
-          : "smooth",
-        block: "end",
-      });
+      scrollToBottom(
+        isReopening ? "auto" : "smooth"
+      );
     }, isReopening ? 0 : 80);
 
     return () => clearTimeout(timeout);
-  }, [
-    visibleMessages,
-    isReopening,
-    chat,
-  ]);
+  }, [visibleMessages, isReopening]);
 
   /*
-   * Keep typing bubble visible.
+   * Keep typing bubble visible only when
+   * the user is already near the bottom.
    */
   useEffect(() => {
     if (!isTyping) return;
 
+    if (userScrolledAwayRef.current) return;
+
     const timeout = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-      });
+      scrollToBottom("smooth");
     }, 50);
 
     return () => clearTimeout(timeout);
   }, [isTyping]);
 
   /*
-   * Reopened chat:
-   * jump directly to bottom.
+   * Reopened chats start at the bottom once.
    */
   useEffect(() => {
     if (!isReopening) return;
 
+    userScrolledAwayRef.current = false;
+
     const timeout = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({
-        behavior: "instant",
-        block: "end",
-      });
+      scrollToBottom("auto");
     }, 50);
 
     return () => clearTimeout(timeout);
@@ -259,15 +284,38 @@ export function ChatWindow({
 
   /*
    * Project selected:
-   * scroll to beginning of selected project.
+   * scroll inside the messages container,
+   * not the browser viewport.
    */
   useEffect(() => {
     if (!selectedProjectId) return;
 
     const timeout = setTimeout(() => {
-      projectStartRef.current?.scrollIntoView({
+      const container =
+        scrollContainerRef.current;
+
+      const projectElement =
+        projectStartRef.current;
+
+      if (!container || !projectElement) {
+        return;
+      }
+
+      const containerRect =
+        container.getBoundingClientRect();
+
+      const projectRect =
+        projectElement.getBoundingClientRect();
+
+      const targetTop =
+        container.scrollTop +
+        projectRect.top -
+        containerRect.top -
+        16;
+
+      container.scrollTo({
+        top: targetTop,
         behavior: "smooth",
-        block: "start",
       });
     }, 150);
 
@@ -282,24 +330,21 @@ export function ChatWindow({
   };
 
   return (
-    <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--wa-chat-bg)]">
+    <main className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-chat-bg)]">
       {/* Header */}
-      <header className="flex shrink-0 items-center justify-between border-b border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-4 py-3 sm:px-5">
-        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+      <header className="flex shrink-0 items-center justify-between border-b border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-3 py-3 sm:px-5">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
           {/* Mobile Back */}
           <button
             type="button"
             onClick={onBack}
-            className="shrink-0 md:hidden"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--wa-text-primary)] md:hidden"
             aria-label="Back to chats"
           >
-            <ArrowLeft
-              className="text-[var(--wa-text-primary)]"
-              size={22}
-            />
+            <ArrowLeft size={22} />
           </button>
 
-          {/* Chat Avatar */}
+          {/* Avatar */}
           <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[var(--wa-search-bg)] sm:h-11 sm:w-11">
             <Image
               src={chatAvatars[chat]}
@@ -312,7 +357,7 @@ export function ChatWindow({
           </div>
 
           {/* Chat Info */}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 className="truncate font-semibold text-[var(--wa-text-primary)]">
               {currentChat.title}
             </h2>
@@ -331,85 +376,112 @@ export function ChatWindow({
           </div>
         </div>
 
-        {/* More Menu */}
-        <div className="relative">
+        {/* Header Actions */}
+        <div className="ml-1 flex shrink-0 items-center gap-0.5">
+          {/* Mobile Theme */}
           <button
             type="button"
             onClick={() =>
-              setMenuOpen((prev) => !prev)
+              onFeatureSelect("theme")
             }
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--wa-text-primary)] transition hover:bg-black/5 dark:hover:bg-white/10"
-            aria-label="More options"
-            aria-expanded={menuOpen}
+            aria-label="Theme"
+            title="Theme"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)] md:hidden"
           >
-            <MoreVertical size={20} />
+            <MoonStar size={19} />
           </button>
 
-          {menuOpen && (
-            <div className="absolute right-0 top-11 z-50 w-[210px] overflow-hidden rounded-lg bg-[var(--wa-header-bg)] py-2 shadow-xl ring-1 ring-black/10 dark:ring-white/10">
-              {/* Back */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onBack();
-                }}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)] md:hidden"
-              >
-                <ArrowLeft size={17} />
-                Back to Chats
-              </button>
+          {/* Mobile Profile */}
+          <button
+            type="button"
+            onClick={() =>
+              onFeatureSelect("profile")
+            }
+            aria-label="Profile"
+            title="Profile"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)] md:hidden"
+          >
+            <UserRound size={19} />
+          </button>
 
-              {/* Resume */}
-              <a
-                href="/resume/Manroop_Kaur_Resume.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  setMenuOpen(false)
-                }
-                className="flex w-full items-center gap-3 px-4 py-3 text-sm text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)]"
-              >
-                <FileText size={17} />
-                View Resume
-              </a>
+          {/* More Menu */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() =>
+                setMenuOpen((prev) => !prev)
+              }
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)]"
+              aria-label="More options"
+              aria-expanded={menuOpen}
+            >
+              <MoreVertical size={20} />
+            </button>
 
-              {/* LinkedIn */}
-              <a
-                href="https://www.linkedin.com/in/manroop-kaur13"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  setMenuOpen(false)
-                }
-                className="flex w-full items-center gap-3 px-4 py-3 text-sm text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)]"
-              >
-                <FaLinkedin size={17} />
-                LinkedIn
-              </a>
+            {menuOpen && (
+              <div className="absolute right-0 top-11 z-50 w-[210px] overflow-hidden rounded-lg bg-[var(--wa-header-bg)] py-2 shadow-xl ring-1 ring-black/10 dark:ring-white/10">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onBack();
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)] md:hidden"
+                >
+                  <ArrowLeft size={17} />
+                  Back to Chats
+                </button>
 
-              {/* GitHub */}
-              <a
-                href="https://github.com/Manroop-kaur13"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  setMenuOpen(false)
-                }
-                className="flex w-full items-center gap-3 px-4 py-3 text-sm text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)]"
-              >
-                <FaGithub size={17} />
-                GitHub
-              </a>
-            </div>
-          )}
+                <a
+                  href="/resume/Manroop_Kaur_Resume.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)]"
+                >
+                  <FileText size={17} />
+                  View Resume
+                </a>
+
+                <a
+                  href="https://www.linkedin.com/in/manroop-kaur13"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)]"
+                >
+                  <FaLinkedin size={17} />
+                  LinkedIn
+                </a>
+
+                <a
+                  href="https://github.com/Manroop-kaur13"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)]"
+                >
+                  <FaGithub size={17} />
+                  GitHub
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Messages */}
       <div
+        ref={scrollContainerRef}
         data-chat-scroll
-        className="chat-wallpaper min-h-0 flex-1 overflow-y-auto px-3 py-5 sm:px-6 sm:py-6"
+        onScroll={handleScroll}
+        className="chat-wallpaper min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5 sm:px-6 sm:py-6"
       >
         {/* Today */}
         <div className="mb-6 flex justify-center sm:mb-8">
@@ -425,14 +497,15 @@ export function ChatWindow({
               <div className="h-px flex-1 bg-[var(--wa-border)]" />
 
               <span className="whitespace-nowrap text-xs font-medium text-[var(--wa-green)] sm:text-sm">
-                {currentChat.messages.length} unread messages
+                {currentChat.messages.length} unread
+                messages
               </span>
 
               <div className="h-px flex-1 bg-[var(--wa-border)]" />
             </div>
           )}
 
-        {/* Normal Messages */}
+        {/* Messages */}
         {currentChat.messages
           .slice(0, visibleMessages)
           .map((message) => (
@@ -451,14 +524,12 @@ export function ChatWindow({
             />
           ))}
 
-        {/* Typing Bubble */}
+        {/* Typing */}
         {isTyping && (
           <div className="mb-3 flex justify-start">
             <div className="flex h-9 items-center gap-1 rounded-lg rounded-tl-sm bg-[var(--wa-bubble-other)] px-4 shadow-sm">
               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--wa-text-secondary)] [animation-delay:-0.3s]" />
-
               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--wa-text-secondary)] [animation-delay:-0.15s]" />
-
               <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--wa-text-secondary)]" />
             </div>
           </div>
@@ -488,10 +559,8 @@ export function ChatWindow({
           </div>
         )}
 
-        {/* Auto-scroll target */}
         <div
-          ref={messagesEndRef}
-          className="h-px"
+          className="h-1"
           aria-hidden="true"
         />
       </div>

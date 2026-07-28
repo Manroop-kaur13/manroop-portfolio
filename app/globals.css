@@ -230,6 +230,45 @@ body {
 /* =========================================
    CHAT WALLPAPER
    ========================================= */
+/* =========================================
+   APP / MOBILE VIEWPORT
+   ========================================= */
+
+/*
+ * 100vh fallback for older Safari.
+ * 100dvh is used by browsers that support
+ * dynamic viewport units.
+ */
+.wa-app-shell {
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+  .wa-app-shell {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+}
+
+/*
+ * Prevent the document itself from becoming
+ * the chat scroller. ChatWindow owns scrolling.
+ */
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+body {
+  overscroll-behavior-x: none;
+}
+
 
 /* =========================================
    CHAT WALLPAPER
@@ -238,6 +277,11 @@ body {
 .chat-wallpaper {
   position: relative;
 
+  /*
+   * This element is the actual scrolling area.
+   */
+  min-height: 0;
+
   background-color: var(--wa-chat-bg);
   background-image: url("/wallpapers/wallpaper-light.png");
   background-repeat: repeat;
@@ -245,36 +289,39 @@ body {
   background-size: 420px auto;
 
   /*
-   * Ensures wallpaper covers the complete
-   * available chat viewport even when the
-   * conversation is very short.
+   * Better touch scrolling on iPhone/iPad Safari.
    */
-  min-height: 100%;
+  -webkit-overflow-scrolling: touch;
+
+  /*
+   * Keep touch gestures available to the
+   * vertical chat scroller.
+   */
+  touch-action: pan-y;
 }
 
 .dark .chat-wallpaper {
   background-image: url("/wallpapers/wallpaper.png");
 }
 
-/* Mobile */
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
 @media (max-width: 767px) {
   .chat-wallpaper {
     /*
-     * Cover the complete mobile chat area first.
-     * Long chats continue naturally through
-     * the repeating wallpaper.
+     * Keep the WhatsApp pattern consistent
+     * across the entire scrollable conversation.
      */
-    min-height: 100%;
     background-size: 280px auto;
-  }
-}
-.dark .chat-wallpaper {
-  background-image: url("/wallpapers/wallpaper.png");
-}
+    background-position: top left;
 
-/* Mobile */
-@media (max-width: 767px) {
-  .chat-wallpaper {
-    background-size: 280px auto;
+    /*
+     * Avoid horizontal movement interfering
+     * with vertical scrolling on touch devices.
+     */
+    overflow-x: hidden;
   }
 }

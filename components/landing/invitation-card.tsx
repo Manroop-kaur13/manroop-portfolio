@@ -11,21 +11,8 @@ export function InvitationCard({
   onAccept,
 }: InvitationCardProps) {
   return (
-    <motion.section
-      initial={{
-        opacity: 0,
-        y: 24,
-        scale: 0.98,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-        scale: 1,
-      }}
-      transition={{
-        duration: 0.65,
-        ease: [0.22, 1, 0.36, 1],
-      }}
+   <motion.section
+  initial={false}
       className="relative z-10 w-full max-w-[620px] overflow-hidden rounded-[28px] border border-white/10 bg-[#111B21]/90 p-6 shadow-2xl backdrop-blur-2xl sm:p-8"
     >
       {/* Subtle glow */}
