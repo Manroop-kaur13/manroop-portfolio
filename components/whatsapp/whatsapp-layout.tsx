@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from "react";
 
@@ -50,7 +49,6 @@ export function WhatsAppLayout() {
   const [activeFeature, setActiveFeature] =
     useState<FeatureType | null>(null);
 
-  const historyInitialized = useRef(false);
 
   const isMobile = useCallback(() => {
     if (typeof window === "undefined") {
@@ -69,29 +67,6 @@ export function WhatsAppLayout() {
    * Here we only make sure that the current
    * workspace entry is labelled as the chat list.
    */
-  useEffect(() => {
-    if (!isMobile()) {
-      return;
-    }
-
-    if (historyInitialized.current) {
-      return;
-    }
-
-    historyInitialized.current = true;
-
-    const currentState =
-      window.history.state ?? {};
-
-    window.history.replaceState(
-      {
-        ...currentState,
-        portfolioStage: "workspace",
-        portfolioView: "list",
-      },
-      ""
-    );
-  }, [isMobile]);
 
   /*
    * Browser Back / iPhone edge swipe.
