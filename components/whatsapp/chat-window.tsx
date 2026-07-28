@@ -58,13 +58,6 @@ const chatAvatars: Record<ChatType, string> = {
   resume: "/images/avatars/resume.jpg",
   contact: "/images/avatars/contact.jpeg",
 };
-const { resolvedTheme, setTheme } = useTheme();
-
-const isDark = resolvedTheme !== "light";
-
-const toggleTheme = () => {
-  setTheme(isDark ? "light" : "dark");
-};
 function getCurrentTime() {
   return new Date().toLocaleTimeString([], {
     hour: "2-digit",
@@ -79,6 +72,14 @@ export function ChatWindow({
   isReopening,
   onFeatureSelect,
 }: Props) {
+  const { resolvedTheme, setTheme } = useTheme();
+
+  const isDark = resolvedTheme !== "light";
+
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
+
   const currentChat = portfolio[chat];
 
   const [menuOpen, setMenuOpen] =
