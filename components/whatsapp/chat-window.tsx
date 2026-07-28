@@ -1,5 +1,5 @@
 "use client";
-
+import { useTheme } from "next-themes";
 import Image from "next/image";
 
 import {
@@ -23,6 +23,12 @@ import {
   FaGithub,
   FaLinkedin,
 } from "react-icons/fa";
+import {
+  ArrowLeft,
+  Moon,
+  Sun,
+  // jo bhi baaki existing icons hain, unhe same rehne do
+} from "lucide-react";
 
 import { projects } from "@/data/projects";
 import { portfolio } from "@/data/portfolio";
@@ -53,7 +59,13 @@ const chatAvatars: Record<ChatType, string> = {
   resume: "/images/avatars/resume.jpg",
   contact: "/images/avatars/contact.jpeg",
 };
+const { resolvedTheme, setTheme } = useTheme();
 
+const isDark = resolvedTheme !== "light";
+
+const toggleTheme = () => {
+  setTheme(isDark ? "light" : "dark");
+};
 function getCurrentTime() {
   return new Date().toLocaleTimeString([], {
     hour: "2-digit",
@@ -379,16 +391,26 @@ export function ChatWindow({
         {/* Header Actions */}
         <div className="ml-1 flex shrink-0 items-center gap-0.5">
           {/* Mobile Theme */}
-          <button
-            type="button"
-            onClick={() =>
-              onFeatureSelect("theme")
-            }
-            aria-label="Theme"
-            title="Theme"
+         <button
+  type="button"
+  onClick={toggleTheme}
+  aria-label={
+    isDark
+      ? "Switch to light theme"
+      : "Switch to dark theme"
+  }
+  title={
+    isDark
+      ? "Light Mode"
+      : "Dark Mode"
+  }
             className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)] md:hidden"
           >
-            <MoonStar size={19} />
+            {isDark ? (
+  <Sun size={19} />
+) : (
+  <Moon size={19} />
+)}
           </button>
 
           {/* Mobile Profile */}

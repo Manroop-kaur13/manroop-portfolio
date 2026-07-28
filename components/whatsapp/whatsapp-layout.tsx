@@ -9,7 +9,6 @@ import {
 
 import { Sidebar } from "./sidebar";
 import { ChatWindow } from "./chat-window";
-import { ThemeScreen } from "./theme-screen";
 import { ProfileScreen } from "./profile-screen";
 
 import type { FeatureType } from "./feature-nav";
@@ -17,13 +16,16 @@ import type { ChatType } from "@/types/chat";
 
 type MobileViewState =
   | {
+      portfolioStage: "workspace";
       portfolioView: "list";
     }
   | {
+      portfolioStage: "workspace";
       portfolioView: "chat";
       chat: ChatType;
     }
   | {
+      portfolioStage: "workspace";
       portfolioView: "feature";
       feature: FeatureType;
     };
@@ -48,15 +50,8 @@ export function WhatsAppLayout() {
   const [activeFeature, setActiveFeature] =
     useState<FeatureType | null>(null);
 
-  /*
-   * Prevent history initialization from running
-   * more than once.
-   */
   const historyInitialized = useRef(false);
 
-  /*
-   * Check whether we're currently on mobile.
-   */
   const isMobile = useCallback(() => {
     if (typeof window === "undefined") {
       return false;
@@ -68,12 +63,11 @@ export function WhatsAppLayout() {
   }, []);
 
   /*
-   * Initialize a portfolio "chat list" history
-   * state when the workspace first opens.
+   * The workspace history entry is created by
+   * app/page.tsx when Accept Invitation is pressed.
    *
-   * This does NOT create another history entry.
-   * It labels the current entry so future chat
-   * and feature entries can return here.
+   * Here we only make sure that the current
+   * workspace entry is labelled as the chat list.
    */
   useEffect(() => {
     if (!isMobile()) {
@@ -92,15 +86,15 @@ export function WhatsAppLayout() {
     window.history.replaceState(
       {
         ...currentState,
+        portfolioStage: "workspace",
         portfolioView: "list",
-      } satisfies MobileViewState,
+      },
       ""
     );
   }, [isMobile]);
 
   /*
-   * Handle browser Back and iPhone Safari/
-   * Chrome edge-swipe navigation.
+   * Browser Back / iPhone edge swipe.
    */
   useEffect(() => {
     const handlePopState = (
@@ -110,44 +104,47 @@ export function WhatsAppLayout() {
         return;
       }
 
-      const state = event.state as
-        | MobileViewState
-        | null;
+      const state =
+        event.state as MobileViewState | null;
 
       /*
-       * Back to main Chats screen.
+       * app/page.tsx handles returning from
+       * workspace to the Invitation screen.
        */
       if (
         !state ||
-        state.portfolioView === "list"
+        state.portfolioStage !== "workspace"
       ) {
+        return;
+      }
+
+      /*
+       * Chats list.
+       */
+      if (state.portfolioView === "list") {
         setActiveFeature(null);
         setMobileChatOpen(false);
         return;
       }
 
       /*
-       * Restore a chat if browser history
-       * moves to a chat entry.
+       * Chat.
        */
       if (state.portfolioView === "chat") {
         setActiveFeature(null);
         setSelectedChat(state.chat);
         setMobileChatOpen(true);
-
-        /*
-         * It has already been opened if it exists
-         * in browser history.
-         */
         setIsReopeningChat(true);
 
         return;
       }
 
       /*
-       * Restore Theme/Profile feature screen.
+       * Profile.
        */
-      if (state.portfolioView === "feature") {
+      if (
+        state.portfolioView === "feature"
+      ) {
         setMobileChatOpen(false);
         setActiveFeature(state.feature);
       }
@@ -167,7 +164,7 @@ export function WhatsAppLayout() {
   }, [isMobile]);
 
   /*
-   * Open a portfolio chat.
+   * Open chat.
    */
   const handleChatSelect = (
     chat: ChatType
@@ -180,12 +177,8 @@ export function WhatsAppLayout() {
     setActiveFeature(null);
 
     /*
-     * IMPORTANT:
-     * Only a chat being opened for the FIRST
-     * time moves to the top of Recent Chats.
-     *
-     * Reopening an existing chat keeps its
-     * current position.
+     * Only FIRST open moves the chat
+     * to the top.
      */
     if (!alreadyOpened) {
       setRecentChats((prev) => [
@@ -194,12 +187,7 @@ export function WhatsAppLayout() {
           (id) => id !== chat
         ),
       ]);
-    }
 
-    /*
-     * Save first-open time only once.
-     */
-    if (!alreadyOpened) {
       const time =
         new Date().toLocaleTimeString([], {
           hour: "2-digit",
@@ -213,16 +201,9 @@ export function WhatsAppLayout() {
       }));
     }
 
-    /*
-     * Mobile:
-     * create a browser-history entry for
-     * this chat.
-     *
-     * Browser Back / iPhone swipe-back will
-     * therefore return to the chat list.
-     */
     if (isMobile()) {
       const state: MobileViewState = {
+        portfolioStage: "workspace",
         portfolioView: "chat",
         chat,
       };
@@ -237,7 +218,10 @@ export function WhatsAppLayout() {
   };
 
   /*
-   * Open Theme/Profile/etc.
+   * Profile.
+   *
+   * Theme is NOT handled here anymore.
+   * FeatureNav toggles it directly.
    */
   const handleFeatureSelect = (
     feature: FeatureType
@@ -245,11 +229,9 @@ export function WhatsAppLayout() {
     setActiveFeature(feature);
     setMobileChatOpen(false);
 
-    /*
-     * Add feature screen to mobile history.
-     */
     if (isMobile()) {
       const state: MobileViewState = {
+        portfolioStage: "workspace",
         portfolioView: "feature",
         feature,
       };
@@ -262,14 +244,7 @@ export function WhatsAppLayout() {
   };
 
   /*
-   * Chat header Back button.
-   *
-   * Mobile uses browser history so the same
-   * navigation path works for:
-   *
-   * - header back arrow
-   * - browser Back
-   * - iPhone edge swipe
+   * Chat Back button.
    */
   const handleMobileChatBack = () => {
     if (isMobile()) {
@@ -281,7 +256,7 @@ export function WhatsAppLayout() {
   };
 
   /*
-   * Theme/Profile Back button.
+   * Profile Back button.
    */
   const handleFeatureBack = () => {
     if (isMobile()) {
@@ -292,9 +267,6 @@ export function WhatsAppLayout() {
     setActiveFeature(null);
   };
 
-  /*
-   * Shared Sidebar.
-   */
   const sidebar = (
     <Sidebar
       selectedChat={selectedChat}
@@ -308,24 +280,22 @@ export function WhatsAppLayout() {
   );
 
   /*
-   * Desktop right-side content.
+   * Desktop content.
    */
   const desktopContent =
-    activeFeature === "theme" ? (
-      <ThemeScreen
-        onBack={handleFeatureBack}
-      />
-    ) : activeFeature === "profile" ? (
+    activeFeature === "profile" ? (
       <ProfileScreen
         onBack={handleFeatureBack}
       />
     ) : selectedChat ? (
-     <ChatWindow
-  chat={selectedChat}
-  onBack={() => {}}
-  isReopening={isReopeningChat}
-  onFeatureSelect={handleFeatureSelect}
-/>
+      <ChatWindow
+        chat={selectedChat}
+        onBack={() => {}}
+        isReopening={isReopeningChat}
+        onFeatureSelect={
+          handleFeatureSelect
+        }
+      />
     ) : (
       <main className="flex min-w-0 flex-1 items-center justify-center bg-[var(--wa-chat-bg)]">
         <div className="max-w-md px-8 text-center">
@@ -347,38 +317,33 @@ export function WhatsAppLayout() {
 
   return (
     <div className="h-[100dvh] min-h-[100dvh] overflow-hidden bg-[var(--wa-app-bg)]">
-      {/* =========================
-          DESKTOP
-          ========================= */}
-
+      {/* DESKTOP */}
       <div className="hidden h-full md:flex">
         {sidebar}
 
         {desktopContent}
       </div>
 
-      {/* =========================
-          MOBILE
-          ========================= */}
-
+      {/* MOBILE */}
       <div className="h-full min-h-0 md:hidden">
-        {activeFeature === "theme" ? (
-          <ThemeScreen
-            onBack={handleFeatureBack}
-          />
-        ) : activeFeature ===
-          "profile" ? (
+        {activeFeature === "profile" ? (
           <ProfileScreen
             onBack={handleFeatureBack}
           />
         ) : mobileChatOpen &&
           selectedChat ? (
-         <ChatWindow
-  chat={selectedChat}
-  onBack={handleMobileChatBack}
-  isReopening={isReopeningChat}
-  onFeatureSelect={handleFeatureSelect}
-/>
+          <ChatWindow
+            chat={selectedChat}
+            onBack={
+              handleMobileChatBack
+            }
+            isReopening={
+              isReopeningChat
+            }
+            onFeatureSelect={
+              handleFeatureSelect
+            }
+          />
         ) : (
           sidebar
         )}
