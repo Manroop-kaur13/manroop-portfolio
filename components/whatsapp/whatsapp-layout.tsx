@@ -37,10 +37,12 @@ export function WhatsAppLayout() {
     setSelectedChat(chat);
     setActiveFeature(null);
 
-    setRecentChats((prev) => [
-      chat,
-      ...prev.filter((id) => id !== chat),
-    ]);
+   if (!alreadyOpened) {
+  setRecentChats((prev) => [
+    chat,
+    ...prev.filter((id) => id !== chat),
+  ]);
+}
 
     if (!alreadyOpened) {
       const time = new Date().toLocaleTimeString([], {

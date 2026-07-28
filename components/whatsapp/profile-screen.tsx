@@ -24,7 +24,7 @@ export function ProfileScreen({
   onBack,
 }: ProfileScreenProps) {
   return (
-    <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--wa-chat-bg)]">
+    <main className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-chat-bg)]">
       {/* Header */}
       <header className="flex min-h-[72px] shrink-0 items-center gap-4 border-b border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-4 py-3 sm:px-5">
         <button
@@ -48,7 +48,7 @@ export function ProfileScreen({
       </header>
 
       {/* Scrollable Content */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-[max(24px,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch]">
         {/* Profile Hero */}
         <section className="flex flex-col items-center border-b border-[var(--wa-border)] bg-[var(--wa-sidebar-bg)] px-6 py-8 text-center sm:py-10">
           {/* Profile Photo */}
