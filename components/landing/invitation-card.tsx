@@ -4,7 +4,7 @@ import {
   ArrowRight,
   MessageCircle,
 } from "lucide-react";
-
+import Image from "next/image";
 interface InvitationCardProps {
   onAccept: () => void;
 }
