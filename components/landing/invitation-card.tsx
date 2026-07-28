@@ -25,12 +25,12 @@ export function InvitationCard({
           {/* Profile Photo */}
           <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full ring-2 ring-[#00A884]/30 sm:h-16 sm:w-16">
             <Image
-              src="/images/avatars/profile.jpg"
+              src="/images/avatars/profile2.jpg"
               alt="Manroop Kaur"
               fill
               priority
               sizes="64px"
-              className="scale-[1.35] object-cover object-top"
+              className="object-cover"
             />
           </div>
 
