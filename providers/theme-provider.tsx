@@ -1,40 +1,24 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+"use client";
 
-import "./globals.css";
+import * as React from "react";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-import { ThemeProvider } from "@/providers/theme-provider";
+type ThemeProviderProps =
+  React.ComponentProps<typeof NextThemesProvider>;
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-export const metadata: Metadata = {
-  title: "Manroop Kaur",
-  description: "Interactive WhatsApp Portfolio",
-};
-
-export default function RootLayout({
+export function ThemeProvider({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+  ...props
+}: ThemeProviderProps) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} font-sans antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem
+      disableTransitionOnChange
+      {...props}
+    >
+      {children}
+    </NextThemesProvider>
   );
 }
