@@ -41,16 +41,13 @@ export default function Home() {
     useState<Stage>("landing");
 
   /*
-   * Mark the initial browser entry as
-   * the Invitation screen.
+   * Mark initial history entry as landing.
    */
   useEffect(() => {
     const currentState =
       window.history.state ?? {};
 
-    if (
-      currentState.portfolioStage
-    ) {
+    if (currentState.portfolioStage) {
       return;
     }
 
@@ -68,9 +65,7 @@ export default function Home() {
   }, []);
 
   /*
-   * Handle browser Back / iPhone swipe
-   * when returning from Chats to the
-   * Invitation screen.
+   * Handle browser Back / iPhone swipe.
    */
   useEffect(() => {
     const handlePopState = (
@@ -130,18 +125,6 @@ export default function Home() {
 
   /*
    * Accept Invitation.
-   *
-   * Create a NEW history entry for
-   * the workspace.
-   *
-   * Therefore:
-   *
-   * Invitation
-   *      ↓
-   * Chats
-   *
-   * and browser Back from Chats
-   * returns to Invitation.
    */
   const handleAccept = () => {
     const state: PortfolioHistoryState = {
@@ -166,12 +149,12 @@ export default function Home() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050606] px-6">
+    <main className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#050606] px-6 py-8">
       <div
-        className="absolute inset-0 overflow-hidden"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
         aria-hidden="true"
       >
-        <div className="absolute left-1/2 top-1/2 h-[900px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/10 blur-[220px]" />
+        <div className="absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/[0.08] blur-[160px]" />
       </div>
 
       <InvitationCard

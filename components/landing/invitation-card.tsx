@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
+
 import {
   ArrowRight,
   MessageCircle,
 } from "lucide-react";
-import Image from "next/image";
+
 interface InvitationCardProps {
   onAccept: () => void;
 }
@@ -13,15 +15,23 @@ export function InvitationCard({
   onAccept,
 }: InvitationCardProps) {
   return (
-    <section className="relative z-10 w-full max-w-[620px] overflow-hidden rounded-[28px] border border-white/10 bg-[#111B21] p-6 shadow-2xlsm:p-8">
+    <section className="relative z-10 w-full max-w-[620px] overflow-hidden rounded-[28px] border border-white/10 bg-[#111B21] p-6 shadow-2xl sm:p-8">
       {/* Subtle glow */}
       <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#00A884]/10 blur-[100px]" />
 
       <div className="relative">
         {/* Top */}
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#00A884]/15 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
-            👋
+          {/* Profile Photo */}
+          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full ring-2 ring-[#00A884]/30 sm:h-16 sm:w-16">
+            <Image
+              src="/images/avatars/profile.jpg"
+              alt="Manroop Kaur"
+              fill
+              priority
+              sizes="64px"
+              className="scale-[1.35] object-cover object-top"
+            />
           </div>
 
           <div className="min-w-0">
@@ -40,13 +50,14 @@ export function InvitationCard({
           <p className="text-sm leading-6 text-gray-200 sm:text-[15px] sm:leading-7">
             Instead of another static portfolio,
             I&apos;d like to take you through my work
-            as a conversation-from projects and
+            as a conversation - from projects and
             technical skills to experience and
             achievements.
           </p>
 
           <div className="mt-3 flex items-center justify-end gap-1 text-[11px] text-gray-400">
             <span>Just now</span>
+
             <span className="text-[#53BDEB]">
               ✓✓
             </span>
