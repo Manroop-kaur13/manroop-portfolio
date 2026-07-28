@@ -1,7 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import {
+  ArrowRight,
+  MessageCircle,
+} from "lucide-react";
 
 interface InvitationCardProps {
   onAccept: () => void;
@@ -11,33 +13,16 @@ export function InvitationCard({
   onAccept,
 }: InvitationCardProps) {
   return (
-   <motion.section
-  initial={false}
-      className="relative z-10 w-full max-w-[620px] overflow-hidden rounded-[28px] border border-white/10 bg-[#111B21]/90 p-6 shadow-2xl backdrop-blur-2xl sm:p-8"
-    >
+    <section className="relative z-10 w-full max-w-[620px] overflow-hidden rounded-[28px] border border-white/10 bg-[#111B21]/90 p-6 shadow-2xl backdrop-blur-2xl sm:p-8">
       {/* Subtle glow */}
       <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#00A884]/10 blur-[100px]" />
 
       <div className="relative">
         {/* Top */}
         <div className="flex items-center gap-4">
-          <motion.div
-            initial={{
-              scale: 0.8,
-              rotate: -10,
-            }}
-            animate={{
-              scale: 1,
-              rotate: 0,
-            }}
-            transition={{
-              delay: 0.15,
-              duration: 0.45,
-            }}
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#00A884]/15 text-2xl sm:h-16 sm:w-16 sm:text-3xl"
-          >
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#00A884]/15 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
             👋
-          </motion.div>
+          </div>
 
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#00A884]">
@@ -51,50 +36,25 @@ export function InvitationCard({
         </div>
 
         {/* Message */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.25,
-            duration: 0.5,
-          }}
-          className="mt-7 rounded-2xl rounded-tl-md bg-[#202C33] p-4 sm:p-5"
-        >
+        <div className="mt-7 rounded-2xl rounded-tl-md bg-[#202C33] p-4 sm:p-5">
           <p className="text-sm leading-6 text-gray-200 sm:text-[15px] sm:leading-7">
-            Instead of another static portfolio, I&apos;d
-            like to take you through my work as a
-            conversation-from projects and technical
-            skills to experience and achievements.
+            Instead of another static portfolio,
+            I&apos;d like to take you through my work
+            as a conversation-from projects and
+            technical skills to experience and
+            achievements.
           </p>
 
           <div className="mt-3 flex items-center justify-end gap-1 text-[11px] text-gray-400">
             <span>Just now</span>
-            <span className="text-[#53BDEB]">✓✓</span>
+            <span className="text-[#53BDEB]">
+              ✓✓
+            </span>
           </div>
-        </motion.div>
+        </div>
 
         {/* Experience hint */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.4,
-            duration: 0.5,
-          }}
-          className="mt-4 flex items-center justify-between rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3.5"
-        >
+        <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3.5">
           <div>
             <p className="text-xs text-gray-400">
               Explore at your own pace
@@ -108,26 +68,13 @@ export function InvitationCard({
           <div className="ml-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00A884]/15 text-[#00A884]">
             <MessageCircle size={20} />
           </div>
-        </motion.div>
+        </div>
 
         {/* Accept */}
-        <motion.button
+        <button
           type="button"
-          initial={{
-            opacity: 0,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.52,
-            duration: 0.5,
-          }}
-          whileTap={{ scale: 0.985 }}
           onClick={onAccept}
-          className="group mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-[#00A884] px-5 py-3.5 text-sm font-semibold text-[#071A15] transition hover:bg-[#06B892] sm:text-base"
+          className="group mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-[#00A884] px-5 py-3.5 text-sm font-semibold text-[#071A15] transition hover:bg-[#06B892] active:scale-[0.985] sm:text-base"
         >
           Accept Invitation
 
@@ -135,21 +82,13 @@ export function InvitationCard({
             size={18}
             className="transition-transform duration-300 group-hover:translate-x-1"
           />
-        </motion.button>
+        </button>
 
         {/* Footer */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{
-            delay: 0.7,
-            duration: 0.5,
-          }}
-          className="mt-5 text-center text-[11px] text-gray-500 sm:text-xs"
-        >
+        <p className="mt-5 text-center text-[11px] text-gray-500 sm:text-xs">
           Built with Next.js, React & TypeScript
-        </motion.p>
+        </p>
       </div>
-    </motion.section>
+    </section>
   );
 }
