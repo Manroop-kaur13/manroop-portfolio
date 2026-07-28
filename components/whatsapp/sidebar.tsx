@@ -148,7 +148,7 @@ export function Sidebar({
             }
             placeholder="Search"
             aria-label="Search chats"
-            className="min-w-0 w-full bg-transparent text-sm text-[var(--wa-text-primary)] outline-none placeholder:text-[var(--wa-text-secondary)] sm:text-base"
+            className="min-w-0 w-full bg-transparent text-base text-[var(--wa-text-primary)] outline-none placeholder:text-[var(--wa-text-secondary)]"
           />
 
           {searchQuery && (
