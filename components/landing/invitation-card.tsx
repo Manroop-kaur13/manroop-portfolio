@@ -13,7 +13,7 @@ export function InvitationCard({
   onAccept,
 }: InvitationCardProps) {
   return (
-    <section className="relative z-10 w-full max-w-[620px] overflow-hidden rounded-[28px] border border-white/10 bg-[#111B21]/90 p-6 shadow-2xl backdrop-blur-2xl sm:p-8">
+    <section className="relative z-10 w-full max-w-[620px] overflow-hidden rounded-[28px] border border-white/10 bg-[#111B21] p-6 shadow-2xlsm:p-8">
       {/* Subtle glow */}
       <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#00A884]/10 blur-[100px]" />
 
