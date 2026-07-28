@@ -10,7 +10,6 @@ import {
 } from "react";
 
 import {
-  ArrowLeft,
   FileText,
   Mail,
   MoonStar,
