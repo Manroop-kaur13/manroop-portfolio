@@ -206,6 +206,10 @@ export function ChatWindow({
     promptTypingStarted,
     setPromptTypingStarted,
   ] = useState(false);
+  const [
+  showMobileHint,
+  setShowMobileHint,
+] = useState(false);
 
   /*
    * Snapshot whether the currently entered
@@ -803,6 +807,7 @@ export function ChatWindow({
    * genuine focus starts scripted typing.
    */
   const handleComposerFocus = () => {
+    setShowMobileHint(false);
     if (recruiterMessageSent) {
       return;
     }
@@ -817,6 +822,43 @@ export function ChatWindow({
 
     setPromptTypingStarted(true);
   };
+  useEffect(() => {
+  const isMobile = window.matchMedia(
+    "(max-width: 767px)"
+  ).matches;
+
+  if (!isMobile) {
+    return;
+  }
+
+  const hintAlreadyShown =
+    sessionStorage.getItem(
+      "portfolio-mobile-typing-hint"
+    );
+
+  if (hintAlreadyShown) {
+    return;
+  }
+
+  /*
+   * Mark immediately so changing chats
+   * cannot show the hint again.
+   */
+  sessionStorage.setItem(
+    "portfolio-mobile-typing-hint",
+    "true"
+  );
+
+  setShowMobileHint(true);
+
+  const timeout = window.setTimeout(() => {
+    setShowMobileHint(false);
+  }, 6000);
+
+  return () => {
+    window.clearTimeout(timeout);
+  };
+}, []);
 
   /*
    * Send via button OR Enter.
@@ -1186,8 +1228,41 @@ export function ChatWindow({
 
       {/* ================= COMPOSER ================= */}
 
-      <div className="shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
-        <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
+      {/* ================= COMPOSER ================= */}
+
+<div className="relative shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
+
+  {showMobileHint && (
+    <div
+      className="
+        absolute bottom-[62px] left-1/2 z-50
+        -translate-x-1/2
+        whitespace-nowrap
+        rounded-lg
+        bg-[#202C33]
+        px-3 py-2
+        font-mono text-[12px] font-medium
+        text-white
+        shadow-lg
+        md:hidden
+        animate-pulse
+      "
+    >
+      Tap the message bar to start typing ↓
+
+      <span
+        className="
+          absolute left-1/2 top-full
+          -translate-x-1/2
+          border-x-[6px] border-t-[6px]
+          border-x-transparent
+          border-t-[#202C33]
+        "
+      />
+    </div>
+  )}
+
+  <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
           <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] px-4">
             {/*
              * Real invisible input:
