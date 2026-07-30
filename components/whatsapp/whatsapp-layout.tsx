@@ -65,17 +65,9 @@ export function WhatsAppLayout() {
     useState(false);
 
   /*
-   * NEW:
-   *
    * A chat becomes completed only when its
    * recruiter interaction is actually sent/
    * completed.
-   *
-   * Therefore:
-   *
-   * openedTimes.about = true
-   * does NOT automatically mean
-   * completedChats.about = true.
    */
   const [completedChats, setCompletedChats] =
     useState<
@@ -84,6 +76,21 @@ export function WhatsAppLayout() {
 
   const [activeFeature, setActiveFeature] =
     useState<FeatureType | null>(null);
+
+  /*
+   * Mobile composer guide.
+   *
+   * This state lives here instead of inside
+   * ChatWindow so changing/reopening chats
+   * does not show the guide again.
+   */
+  const [mobileGuideShown, setMobileGuideShown] =
+    useState(false);
+
+  const handleMobileGuideShown =
+    useCallback(() => {
+      setMobileGuideShown(true);
+    }, []);
 
   const historyInitialized = useRef(false);
 
@@ -265,8 +272,6 @@ export function WhatsAppLayout() {
   };
 
   /*
-   * NEW:
-   *
    * Called by ChatWindow when the recruiter
    * has actually completed/sent the interaction.
    */
@@ -440,6 +445,12 @@ export function WhatsAppLayout() {
             }
             onFeatureSelect={
               handleFeatureSelect
+            }
+            showMobileGuide={
+              !mobileGuideShown
+            }
+            onMobileGuideShown={
+              handleMobileGuideShown
             }
           />
         ) : (

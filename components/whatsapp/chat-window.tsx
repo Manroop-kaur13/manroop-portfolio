@@ -46,6 +46,8 @@ interface Props {
   onFeatureSelect: (
     feature: FeatureType
   ) => void;
+  showMobileGuide?: boolean;
+  onMobileGuideShown?: () => void;
 }
 
 const chatAvatars: Record<
@@ -112,6 +114,8 @@ export function ChatWindow({
   isCompleted,
   onComplete,
   onFeatureSelect,
+  showMobileGuide = false,
+  onMobileGuideShown,
 }: Props) {
   const {
     resolvedTheme,
@@ -363,20 +367,13 @@ let hasShownMobileGuide = false;
  * =====================================================
  */
 useEffect(() => {
-  const isMobile = window.matchMedia(
-    "(max-width: 767px)"
-  ).matches;
-
-  if (!isMobile) {
+  if (!showMobileGuide) {
     return;
   }
 
-  if (hasShownMobileGuide) {
-    return;
-  }
-
-  hasShownMobileGuide = true;
   setShowMobileHint(true);
+
+  onMobileGuideShown?.();
 
   const timer = window.setTimeout(() => {
     setShowMobileHint(false);
@@ -385,8 +382,11 @@ useEffect(() => {
   return () => {
     window.clearTimeout(timer);
   };
-}, []);
-  /*
+}, [
+  showMobileGuide,
+  onMobileGuideShown,
+]);
+/*
    * =====================================================
    * RECRUITER PROMPT TYPING
    * =====================================================
