@@ -17,6 +17,7 @@ import {
   Moon,
   MoreVertical,
   Send,
+  Smile,
   Sun,
   UserRound,
 } from "lucide-react";
@@ -1152,29 +1153,30 @@ useEffect(() => {
             </div>
           )}
 
-        {/* Recruiter = RIGHT / GREEN */}
-        {recruiterMessageSent && (
-          <div className="mb-3 flex justify-end">
-            <div className="max-w-[85%] rounded-lg rounded-tr-sm bg-[var(--wa-bubble-me)] px-3 py-2 shadow-sm sm:max-w-[72%]">
-              <div className="flex items-end gap-2">
-                <p className="min-w-0 text-[14px] leading-5 text-[var(--wa-text-primary)] sm:text-[15px]">
-                  {recruiterPrompt}
-                </p>
+       {/* Recruiter = RIGHT / GREEN */}
+{recruiterMessageSent && (
+  <div className="mb-3 flex justify-end">
+    <div className="relative max-w-[85%] rounded-lg rounded-tr-sm bg-[var(--wa-bubble-me)] px-3 pb-2 pt-2 shadow-sm sm:max-w-[72%]">
+      <p className="text-[14px] leading-5 text-[var(--wa-text-primary)] sm:text-[15px]">
+        {recruiterPrompt}
 
-                <div className="ml-1 flex shrink-0 items-center gap-1 self-end whitespace-nowrap text-[10px] text-[var(--wa-text-secondary)]">
-                  <span>
-                    {recruiterMessageTime ||
-                      getCurrentTime()}
-                  </span>
+        {/* Space reserved only at the end of the final line */}
+        <span className="inline-block w-[72px]" />
+      </p>
 
-                  <span className="text-[#53BDEB]">
-                    ✓✓
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="absolute bottom-[6px] right-2 flex items-center gap-1 whitespace-nowrap text-[10px] leading-none text-[var(--wa-text-secondary)]">
+        <span>
+          {recruiterMessageTime ||
+            getCurrentTime()}
+        </span>
+
+        <span className="text-[#53BDEB]">
+          ✓✓
+        </span>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Manroop = LEFT / INCOMING */}
         {conversationMessages
@@ -1298,10 +1300,11 @@ useEffect(() => {
 
         <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
           <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] px-4">
-            {/*
-             * Real invisible input.
-             * Required for native mobile keyboard.
-             */}
+            <Smile
+  size={21}
+  className="pointer-events-none mr-2.5 shrink-0 text-[var(--wa-text-secondary)]"
+  aria-hidden="true"
+/>
             <input
               ref={inputRef}
               type="text"
