@@ -21,12 +21,10 @@ export default function ResumeCard({
     <div className="w-[280px] max-w-full overflow-hidden rounded-xl rounded-tr-md bg-[var(--wa-bubble-me)] p-1.5 text-[var(--wa-text-primary)] shadow-lg sm:w-full sm:max-w-[400px] sm:rounded-2xl sm:rounded-tr-md sm:p-2">
       {/* Resume Preview */}
       <a
-        href={file}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="relative block h-[155px] overflow-hidden rounded-lg bg-white sm:h-[270px] sm:rounded-xl"
-        aria-label="Open Manroop Kaur's resume"
-      >
+  href={file}
+  className="relative block h-[155px] overflow-hidden rounded-lg bg-white sm:h-[270px] sm:rounded-xl"
+  aria-label="Open Manroop Kaur's resume"
+>
         <Image
           src={preview}
           alt="Preview of Manroop Kaur's resume"
@@ -64,12 +62,10 @@ export default function ResumeCard({
 
         {/* Actions */}
         <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-3 sm:gap-2">
-          <a
-            href={file}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 rounded-lg bg-black/5 px-2 py-2 text-[11px] font-medium text-[var(--wa-text-primary)] transition hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
-          >
+         <a
+  href={file}
+  className="flex items-center justify-center gap-1.5 rounded-lg bg-black/5 px-2 py-2 text-[11px] font-medium text-[var(--wa-text-primary)] transition hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
+>
             <ExternalLink
               size={14}
               className="sm:h-4 sm:w-4"
