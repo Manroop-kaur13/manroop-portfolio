@@ -1238,31 +1238,31 @@ useEffect(() => {
         {showMobileHint && (
           <div
             className="
-              absolute bottom-[64px] left-4 z-[100]
-whitespace-nowrap
-              rounded-lg
-              bg-[#202C33]
-              px-3.5 py-2.5
-              font-mono
-              text-[12px] font-medium
-              text-white
-              shadow-xl
-              md:hidden
-            "
+  absolute bottom-[64px] left-1/2 z-[100]
+  -translate-x-1/2
+  whitespace-nowrap
+  rounded-lg
+  bg-[#202C33]
+  px-3.5 py-2.5
+  font-mono
+  text-[12px] font-medium
+  text-white
+  shadow-xl
+  md:hidden
+"
           >
-            <span>{mobileHintText}</span>
+           <span>{mobileHintText}</span>
 
-            {mobileHintText.length > 0 && (
-              <>
-                <span className="ml-[2px] inline-block animate-pulse">
-                  |
-                </span>
+<span className="ml-[1px] inline-block animate-pulse">
+  |
+</span>
 
-                <span className="ml-1">
-                  ↓
-                </span>
-              </>
-            )}
+{mobileHintText.length ===
+  "Tap the message bar to start typing".length && (
+    <span className="ml-1">
+      ↓
+    </span>
+)}
 
             <span
   className="
