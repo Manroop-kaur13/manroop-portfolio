@@ -385,43 +385,23 @@ useEffect(() => {
     return;
   }
 
-  const hint =
-    "Tap the message bar to start typing";
+  setMobileHintText(
+    "Tap the message bar to start typing ↓"
+  );
 
-  let characterIndex = 0;
+  setShowMobileHint(true);
 
-  const showTimer = setTimeout(() => {
-    setShowMobileHint(true);
-    setMobileHintText("");
+  sessionStorage.setItem(
+    MOBILE_HINT_KEY,
+    "true"
+  );
 
-    sessionStorage.setItem(
-      MOBILE_HINT_KEY,
-      "true"
-    );
-  }, 500);
-
-  const typingTimer = setInterval(() => {
-    characterIndex += 1;
-
-    setMobileHintText(
-      hint.slice(0, characterIndex)
-    );
-
-    if (
-      characterIndex >= hint.length
-    ) {
-      clearInterval(typingTimer);
-    }
-  }, 35);
-
-  const hideTimer = setTimeout(() => {
+  const hideTimer = window.setTimeout(() => {
     setShowMobileHint(false);
-  }, 6500);
+  }, 3000);
 
   return () => {
-    clearTimeout(showTimer);
-    clearTimeout(hideTimer);
-    clearInterval(typingTimer);
+    window.clearTimeout(hideTimer);
   };
 }, []);
 
@@ -1235,11 +1215,12 @@ useEffect(() => {
 
       <div className="relative shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
         {/* MOBILE ONE-TIME HINT */}
-        {showMobileHint && (
+       {showMobileHint && (
   <div
     className="
       absolute bottom-[64px] left-1/2 z-[100]
-      w-[285px] -translate-x-1/2
+      -translate-x-1/2
+      whitespace-nowrap
       rounded-lg
       bg-[#202C33]
       px-3.5 py-2.5
@@ -1248,22 +1229,12 @@ useEffect(() => {
       text-white
       shadow-xl
       md:hidden
+      animate-[mobileHintIn_250ms_ease-out]
     "
   >
-    <div className="flex items-center whitespace-nowrap">
-      <span>{mobileHintText}</span>
-
-      <span className="ml-[1px] inline-block animate-pulse">
-        |
-      </span>
-
-      {mobileHintText.length ===
-        "Tap the message bar to start typing".length && (
-        <span className="ml-1">
-          ↓
-        </span>
-      )}
-    </div>
+    <span>
+      {mobileHintText}
+    </span>
 
     <span
       className="

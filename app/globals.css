@@ -362,3 +362,14 @@ img,
 video {
   transition: none;
 }
+@keyframes mobileHintIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
