@@ -435,10 +435,6 @@ useEffect(() => {
       return;
     }
 
-    if (isReopening) {
-      return;
-    }
-
     if (completedOnEntryRef.current) {
       return;
     }
@@ -538,7 +534,7 @@ useEffect(() => {
     chat,
     recruiterPrompt,
     promptTypingStarted,
-    isReopening,
+
     recruiterMessageSent,
   ]);
 
