@@ -36,6 +36,9 @@ type PortfolioHistoryState =
       portfolioView: "list";
     };
 
+const MOBILE_HINT_KEY =
+  "portfolio-mobile-typing-hint-shown";
+
 export default function Home() {
   const [stage, setStage] =
     useState<Stage>("landing");
@@ -125,11 +128,16 @@ export default function Home() {
 
   /*
    * Accept Invitation.
+   *
+   * A fresh Accept starts a fresh portfolio
+   * journey, so the mobile composer guide may
+   * appear once again in the first opened chat.
    */
   const handleAccept = () => {
     sessionStorage.removeItem(
-  "portfolio-mobile-typing-hint-shown"
-);
+      MOBILE_HINT_KEY
+    );
+
     const state: PortfolioHistoryState = {
       portfolioStage: "workspace",
       portfolioView: "list",

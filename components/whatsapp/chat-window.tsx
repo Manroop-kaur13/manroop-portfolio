@@ -208,11 +208,6 @@ export function ChatWindow({
     setShowMobileHint,
   ] = useState(false);
 
-  const [
-    mobileHintText,
-    setMobileHintText,
-  ] = useState("");
-
   /*
    * Snapshot whether the chat was already
    * completed when this visit began.
@@ -375,9 +370,7 @@ useEffect(() => {
   if (!isMobile) {
     return;
   }
-sessionStorage.removeItem(
-  MOBILE_HINT_KEY
-);
+
   const alreadyShown =
     sessionStorage.getItem(
       MOBILE_HINT_KEY
@@ -387,22 +380,27 @@ sessionStorage.removeItem(
     return;
   }
 
-  setMobileHintText(
-    "Tap the message bar to start typing ↓"
-  );
-
-  setShowMobileHint(true);
-
+  /*
+   * Mark immediately so changing chats
+   * cannot show the guide again.
+   */
   sessionStorage.setItem(
     MOBILE_HINT_KEY,
     "true"
   );
 
-  const hideTimer = window.setTimeout(() => {
-    setShowMobileHint(false);
-  }, 3000);
+  const showTimer =
+    window.setTimeout(() => {
+      setShowMobileHint(true);
+    }, 300);
+
+  const hideTimer =
+    window.setTimeout(() => {
+      setShowMobileHint(false);
+    }, 3300);
 
   return () => {
+    window.clearTimeout(showTimer);
     window.clearTimeout(hideTimer);
   };
 }, []);
@@ -1044,8 +1042,6 @@ sessionStorage.removeItem(
 
                 <a
                   href="/resume/Manroop_Kaur_Resume.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   onClick={() =>
                     setMenuOpen(false)
                   }
@@ -1218,38 +1214,37 @@ sessionStorage.removeItem(
       <div className="relative shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
         {/* MOBILE ONE-TIME HINT */}
        {showMobileHint && (
-  <div
-    className="
-      absolute bottom-[64px] left-1/2 z-[100]
-      -translate-x-1/2
-      whitespace-nowrap
-      rounded-lg
-      bg-[#202C33]
-      px-3.5 py-2.5
-      font-mono
-      text-[12px] font-medium
-      text-white
-      shadow-xl
-      md:hidden
-      animate-[mobileHintIn_250ms_ease-out]
-    "
-  >
-    <span>
-      {mobileHintText}
-    </span>
+          <div
+            className="
+              absolute bottom-[64px] left-1/2 z-[100]
+              -translate-x-1/2
+              whitespace-nowrap
+              rounded-lg
+              bg-[#202C33]
+              px-3.5 py-2.5
+              font-mono
+              text-[12px] font-medium
+              text-white
+              shadow-xl
+              md:hidden
+              animate-[mobileHintFadeIn_250ms_ease-out]
+            "
+          >
+            Tap the message bar to start typing ↓
 
-    <span
-      className="
-        absolute left-1/2 top-full
-        -translate-x-1/2
-        border-x-[7px]
-        border-t-[7px]
-        border-x-transparent
-        border-t-[#202C33]
-      "
-    />
-  </div>
-)}
+            <span
+              className="
+                absolute left-1/2 top-full
+                -translate-x-1/2
+                border-x-[7px]
+                border-t-[7px]
+                border-x-transparent
+                border-t-[#202C33]
+              "
+            />
+          </div>
+        )}
+
         <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
           <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] pl-3 pr-4">
             <Smile
