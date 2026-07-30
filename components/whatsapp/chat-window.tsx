@@ -320,22 +320,7 @@ export function ChatWindow({
       return;
     }
 
-    if (
-      isReopening &&
-      !completedOnEntryRef.current
-    ) {
-      setTypedPrompt(
-        recruiterPrompt
-      );
-
-      setPromptReady(true);
-      setPromptTypingStarted(false);
-
-      setRecruiterMessageSent(false);
-      setRecruiterMessageTime("");
-
-      return;
-    }
+    
 
     setTypedPrompt("");
     setPromptReady(false);
@@ -872,10 +857,7 @@ useEffect(() => {
       return;
     }
 
-    if (isReopening) {
-      return;
-    }
-
+    
     if (promptTypingStarted) {
       return;
     }
