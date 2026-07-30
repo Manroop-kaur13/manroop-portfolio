@@ -127,6 +127,9 @@ export default function Home() {
    * Accept Invitation.
    */
   const handleAccept = () => {
+    sessionStorage.removeItem(
+  "portfolio-mobile-typing-hint-shown"
+);
     const state: PortfolioHistoryState = {
       portfolioStage: "workspace",
       portfolioView: "list",

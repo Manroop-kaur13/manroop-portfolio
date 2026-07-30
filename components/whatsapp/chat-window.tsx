@@ -1251,30 +1251,32 @@ useEffect(() => {
               md:hidden
             "
           >
-            <span>
-              {mobileHintText}
-            </span>
+        <span>
+  {mobileHintText}
+</span>
 
-            <span className="ml-[2px] inline-block animate-pulse">
-              |
-            </span>
+{mobileHintText.length > 0 && (
+  <>
+    <span className="ml-[2px] inline-block animate-pulse">
+      |
+    </span>
 
-            <span className="ml-1">
-              ↓
-            </span>
+    <span className="ml-1">
+      ↓
+    </span>
+  </>
+)}
 
-            <span
-              className="
-                absolute left-1/2 top-full
-                -translate-x-1/2
-                border-x-[7px]
-                border-t-[7px]
-                border-x-transparent
-                border-t-[#202C33]
-              "
-            />
-          </div>
-        )}
+<span
+  className="
+    absolute left-1/2 top-full
+    -translate-x-1/2
+    border-x-[7px]
+    border-t-[7px]
+    border-x-transparent
+    border-t-[#202C33]
+  "
+/>
 
         <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
           <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] px-4">
