@@ -369,6 +369,20 @@ useEffect(() => {
 
   if (!isMobile) return;
 
+  const alreadyShown =
+    sessionStorage.getItem(
+      "portfolio-guide-shown"
+    );
+
+  if (alreadyShown === "true") {
+    return;
+  }
+
+  sessionStorage.setItem(
+    "portfolio-guide-shown",
+    "true"
+  );
+
   setShowMobileHint(true);
 
   const timer = window.setTimeout(() => {
@@ -379,7 +393,6 @@ useEffect(() => {
     window.clearTimeout(timer);
   };
 }, []);
-
   /*
    * =====================================================
    * RECRUITER PROMPT TYPING
