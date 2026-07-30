@@ -1231,7 +1231,7 @@ useEffect(() => {
         />
       </div>
 
-      {/* ================= COMPOSER ================= */}
+          {/* ================= COMPOSER ================= */}
 
       <div className="relative shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
         {/* MOBILE ONE-TIME HINT */}
@@ -1251,46 +1251,45 @@ useEffect(() => {
               md:hidden
             "
           >
-        <span>
-  {mobileHintText}
-</span>
+            <span>{mobileHintText}</span>
 
-{mobileHintText.length > 0 && (
-  <>
-    <span className="ml-[2px] inline-block animate-pulse">
-      |
-    </span>
+            {mobileHintText.length > 0 && (
+              <>
+                <span className="ml-[2px] inline-block animate-pulse">
+                  |
+                </span>
 
-    <span className="ml-1">
-      ↓
-    </span>
-  </>
-)}
+                <span className="ml-1">
+                  ↓
+                </span>
+              </>
+            )}
 
-<span
-  className="
-    absolute left-1/2 top-full
-    -translate-x-1/2
-    border-x-[7px]
-    border-t-[7px]
-    border-x-transparent
-    border-t-[#202C33]
-  "
-/>
+            <span
+              className="
+                absolute left-1/2 top-full
+                -translate-x-1/2
+                border-x-[7px]
+                border-t-[7px]
+                border-x-transparent
+                border-t-[#202C33]
+              "
+            />
+          </div>
+        )}
 
         <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
-          <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] px-4">
+          <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] pl-3 pr-4">
             <Smile
-  size={21}
-  className="pointer-events-none mr-2.5 shrink-0 text-[var(--wa-text-secondary)]"
-  aria-hidden="true"
-/>
+              size={21}
+              className="pointer-events-none mr-2.5 shrink-0 text-[var(--wa-text-secondary)]"
+              aria-hidden="true"
+            />
+
             <input
               ref={inputRef}
               type="text"
-              onFocus={
-                handleComposerFocus
-              }
+              onFocus={handleComposerFocus}
               inputMode="text"
               autoComplete="off"
               autoCorrect="off"
@@ -1306,7 +1305,6 @@ useEffect(() => {
             >
               {recruiterMessageSent ? (
                 <>
-                  {/* | Message */}
                   <span className="mr-[2px] inline-block h-[19px] w-[1.5px] animate-pulse bg-[var(--wa-text-primary)]" />
 
                   <span className="text-[var(--wa-text-secondary)]">
@@ -1319,7 +1317,6 @@ useEffect(() => {
                     {typedPrompt}
                   </span>
 
-                  {/* Prompt| */}
                   <span className="ml-[1px] inline-block h-[19px] w-[1.5px] animate-pulse bg-[var(--wa-text-primary)]" />
                 </>
               ) : (
@@ -1338,13 +1335,8 @@ useEffect(() => {
 
           <button
             type="button"
-            onClick={
-              handleRecruiterSend
-            }
-            disabled={
-              !promptReady ||
-              recruiterMessageSent
-            }
+            onClick={handleRecruiterSend}
+            disabled={!promptReady || recruiterMessageSent}
             aria-label="Send message"
             title={
               recruiterMessageSent
@@ -1354,8 +1346,7 @@ useEffect(() => {
                   : "Typing..."
             }
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
-              promptReady &&
-              !recruiterMessageSent
+              promptReady && !recruiterMessageSent
                 ? "bg-[var(--wa-green)] text-white hover:brightness-105 active:scale-95"
                 : "cursor-default bg-[var(--wa-green)]/40 text-white/60"
             }`}
