@@ -1236,46 +1236,47 @@ useEffect(() => {
       <div className="relative shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
         {/* MOBILE ONE-TIME HINT */}
         {showMobileHint && (
-          <div
-            className="
-  absolute bottom-[64px] left-1/2 z-[100]
-  -translate-x-1/2
-  whitespace-nowrap
-  rounded-lg
-  bg-[#202C33]
-  px-3.5 py-2.5
-  font-mono
-  text-[12px] font-medium
-  text-white
-  shadow-xl
-  md:hidden
-"
-          >
-           <span>{mobileHintText}</span>
+  <div
+    className="
+      absolute bottom-[64px] left-1/2 z-[100]
+      w-[285px] -translate-x-1/2
+      rounded-lg
+      bg-[#202C33]
+      px-3.5 py-2.5
+      font-mono
+      text-[12px] font-medium
+      text-white
+      shadow-xl
+      md:hidden
+    "
+  >
+    <div className="flex items-center whitespace-nowrap">
+      <span>{mobileHintText}</span>
 
-<span className="ml-[1px] inline-block animate-pulse">
-  |
-</span>
+      <span className="ml-[1px] inline-block animate-pulse">
+        |
+      </span>
 
-{mobileHintText.length ===
-  "Tap the message bar to start typing".length && (
-    <span className="ml-1">
-      ↓
-    </span>
+      {mobileHintText.length ===
+        "Tap the message bar to start typing".length && (
+        <span className="ml-1">
+          ↓
+        </span>
+      )}
+    </div>
+
+    <span
+      className="
+        absolute left-1/2 top-full
+        -translate-x-1/2
+        border-x-[7px]
+        border-t-[7px]
+        border-x-transparent
+        border-t-[#202C33]
+      "
+    />
+  </div>
 )}
-
-            <span
-  className="
-    absolute left-6 top-full
-    border-x-[7px]
-    border-t-[7px]
-    border-x-transparent
-    border-t-[#202C33]
-  "
-/>
-          </div>
-        )}
-
         <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
           <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] pl-3 pr-4">
             <Smile
