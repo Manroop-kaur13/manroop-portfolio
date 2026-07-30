@@ -129,7 +129,7 @@ export function ChatWindow({
 
   const currentChat =
     portfolio[chat];
-
+let hasShownMobileGuide = false;
   const recruiterPrompt =
     recruiterPrompts[chat];
 
@@ -367,22 +367,15 @@ useEffect(() => {
     "(max-width: 767px)"
   ).matches;
 
-  if (!isMobile) return;
-
-  const alreadyShown =
-    sessionStorage.getItem(
-      "portfolio-guide-shown"
-    );
-
-  if (alreadyShown === "true") {
+  if (!isMobile) {
     return;
   }
 
-  sessionStorage.setItem(
-    "portfolio-guide-shown",
-    "true"
-  );
+  if (hasShownMobileGuide) {
+    return;
+  }
 
+  hasShownMobileGuide = true;
   setShowMobileHint(true);
 
   const timer = window.setTimeout(() => {
