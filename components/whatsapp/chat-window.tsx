@@ -1238,9 +1238,8 @@ useEffect(() => {
         {showMobileHint && (
           <div
             className="
-              absolute bottom-[64px] left-1/2 z-[100]
-              -translate-x-1/2
-              whitespace-nowrap
+              absolute bottom-[64px] left-4 z-[100]
+whitespace-nowrap
               rounded-lg
               bg-[#202C33]
               px-3.5 py-2.5
@@ -1266,15 +1265,14 @@ useEffect(() => {
             )}
 
             <span
-              className="
-                absolute left-1/2 top-full
-                -translate-x-1/2
-                border-x-[7px]
-                border-t-[7px]
-                border-x-transparent
-                border-t-[#202C33]
-              "
-            />
+  className="
+    absolute left-6 top-full
+    border-x-[7px]
+    border-t-[7px]
+    border-x-transparent
+    border-t-[#202C33]
+  "
+/>
           </div>
         )}
 
