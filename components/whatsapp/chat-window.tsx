@@ -375,7 +375,9 @@ useEffect(() => {
   if (!isMobile) {
     return;
   }
-
+sessionStorage.removeItem(
+  MOBILE_HINT_KEY
+);
   const alreadyShown =
     sessionStorage.getItem(
       MOBILE_HINT_KEY
