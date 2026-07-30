@@ -90,6 +90,9 @@ const recruiterPrompts: Record<
     "How can I reach you?",
 };
 
+const MOBILE_HINT_KEY =
+  "portfolio-mobile-typing-hint-shown";
+
 function getCurrentTime() {
   return new Date().toLocaleTimeString(
     [],
@@ -130,32 +133,21 @@ export function ChatWindow({
     recruiterPrompts[chat];
 
   /*
-   * IMPORTANT:
+   * The old portfolio data contains both
+   * recruiter-style and Manroop messages.
    *
-   * portfolio.ts was written before the new
-   * recruiter composer interaction existed.
-   *
-   * Some chats therefore begin with an old
-   * recruiter-style opening question.
-   *
-   * The new scripted recruiter prompt replaces
-   * ONLY that old opening question.
-   *
-   * About and any chat that starts with "me"
-   * keeps all its existing content.
-   *
-   * Later messages are preserved as content,
-   * but visually the portfolio responses are
-   * rendered from Manroop's side.
+   * Recruiter interaction is now generated
+   * separately, so only Manroop's original
+   * content is used for the response sequence.
    */
   const conversationMessages = useMemo(
-  () =>
-    portfolio[chat].messages.filter(
-      (message) =>
-        message.sender === "me"
-    ),
-  [chat]
-);
+    () =>
+      portfolio[chat].messages.filter(
+        (message) =>
+          message.sender === "me"
+      ),
+    [chat]
+  );
 
   const [menuOpen, setMenuOpen] =
     useState(false);
@@ -206,20 +198,23 @@ export function ChatWindow({
     promptTypingStarted,
     setPromptTypingStarted,
   ] = useState(false);
-  const [
-  showMobileHint,
-  setShowMobileHint,
-] = useState(false);
 
   /*
-   * Snapshot whether the currently entered
-   * chat was already completed BEFORE this
-   * visit.
-   *
-   * When Send is pressed, parent isCompleted
-   * changes to true, but this ref intentionally
-   * remains false during this visit so that
-   * Manroop's replies can animate normally.
+   * Mobile onboarding hint.
+   */
+  const [
+    showMobileHint,
+    setShowMobileHint,
+  ] = useState(false);
+
+  const [
+    mobileHintText,
+    setMobileHintText,
+  ] = useState("");
+
+  /*
+   * Snapshot whether the chat was already
+   * completed when this visit began.
    */
   const completedOnEntryRef =
     useRef(false);
@@ -305,19 +300,6 @@ export function ChatWindow({
    * =====================================================
    * INITIAL RECRUITER STATE
    * =====================================================
-   *
-   * Completed reopen:
-   * recruiter prompt + all replies restored.
-   *
-   * Incomplete reopen:
-   * full recruiter prompt waits in composer.
-   *
-   * First desktop open:
-   * prompt begins typing automatically.
-   *
-   * First mobile open:
-   * waits for actual composer focus so the
-   * native keyboard can open naturally.
    */
   useEffect(() => {
     if (restoreCompletedChat) {
@@ -366,6 +348,12 @@ export function ChatWindow({
         "(max-width: 767px)"
       ).matches;
 
+    /*
+     * Desktop starts automatically.
+     *
+     * Mobile waits for a genuine user tap so
+     * the native keyboard can open.
+     */
     if (!isMobile) {
       setPromptTypingStarted(true);
     }
@@ -375,6 +363,81 @@ export function ChatWindow({
     isReopening,
     restoreCompletedChat,
   ]);
+
+  /*
+   * =====================================================
+   * MOBILE FIRST-USE HINT
+   * =====================================================
+   *
+   * Mobile only.
+   * Shows once per browser tab/session.
+   * Appears 500ms after the first chat loads.
+   * Types its instruction letter by letter.
+   * Hides when composer is tapped or after
+   * roughly six seconds.
+   */
+  /*
+ * =====================================================
+ * MOBILE FIRST-USE HINT
+ * =====================================================
+ */
+useEffect(() => {
+  const isMobile = window.matchMedia(
+    "(max-width: 767px)"
+  ).matches;
+
+  if (!isMobile) {
+    return;
+  }
+
+  const alreadyShown =
+    sessionStorage.getItem(
+      MOBILE_HINT_KEY
+    );
+
+  if (alreadyShown === "true") {
+    return;
+  }
+
+  const hint =
+    "Tap the message bar to start typing";
+
+  let characterIndex = 0;
+
+  const showTimer = setTimeout(() => {
+    setShowMobileHint(true);
+    setMobileHintText("");
+
+    sessionStorage.setItem(
+      MOBILE_HINT_KEY,
+      "true"
+    );
+  }, 500);
+
+  const typingTimer = setInterval(() => {
+    characterIndex += 1;
+
+    setMobileHintText(
+      hint.slice(0, characterIndex)
+    );
+
+    if (
+      characterIndex >= hint.length
+    ) {
+      clearInterval(typingTimer);
+    }
+  }, 35);
+
+  const hideTimer = setTimeout(() => {
+    setShowMobileHint(false);
+  }, 6500);
+
+  return () => {
+    clearTimeout(showTimer);
+    clearTimeout(hideTimer);
+    clearInterval(typingTimer);
+  };
+}, []);
 
   /*
    * =====================================================
@@ -515,10 +578,6 @@ export function ChatWindow({
       return;
     }
 
-    /*
-     * Completed before entering:
-     * restore everything immediately.
-     */
     if (restoreCompletedChat) {
       setVisibleMessages(
         messages.length
@@ -530,8 +589,8 @@ export function ChatWindow({
     }
 
     /*
-     * Nothing from Manroop appears until
-     * recruiter actually presses Send.
+     * No response appears until recruiter
+     * actually sends the scripted prompt.
      */
     if (!recruiterMessageSent) {
       setVisibleMessages(0);
@@ -575,11 +634,6 @@ export function ChatWindow({
             return;
           }
 
-          /*
-           * Manroop is replying, so typing
-           * indicator belongs to the incoming
-           * side.
-           */
           setIsTyping(true);
 
           await wait(
@@ -675,7 +729,7 @@ export function ChatWindow({
   ]);
 
   /*
-   * Keep Manroop typing indicator visible.
+   * Keep typing indicator visible.
    */
   useEffect(() => {
     if (!isTyping) {
@@ -803,11 +857,16 @@ export function ChatWindow({
   }, [selectedProjectId]);
 
   /*
-   * Mobile:
-   * genuine focus starts scripted typing.
+   * Mobile genuine focus:
+   *
+   * - removes onboarding hint
+   * - starts scripted prompt typing
+   * - native keyboard remains controlled by
+   *   the real input focus
    */
   const handleComposerFocus = () => {
     setShowMobileHint(false);
+
     if (recruiterMessageSent) {
       return;
     }
@@ -822,43 +881,6 @@ export function ChatWindow({
 
     setPromptTypingStarted(true);
   };
-  useEffect(() => {
-  const isMobile = window.matchMedia(
-    "(max-width: 767px)"
-  ).matches;
-
-  if (!isMobile) {
-    return;
-  }
-
-  const hintAlreadyShown =
-    sessionStorage.getItem(
-      "portfolio-mobile-typing-hint"
-    );
-
-  if (hintAlreadyShown) {
-    return;
-  }
-
-  /*
-   * Mark immediately so changing chats
-   * cannot show the hint again.
-   */
-  sessionStorage.setItem(
-    "portfolio-mobile-typing-hint",
-    "true"
-  );
-
-  setShowMobileHint(true);
-
-  const timeout = window.setTimeout(() => {
-    setShowMobileHint(false);
-  }, 6000);
-
-  return () => {
-    window.clearTimeout(timeout);
-  };
-}, []);
 
   /*
    * Send via button OR Enter.
@@ -872,6 +894,8 @@ export function ChatWindow({
       return;
     }
 
+    setShowMobileHint(false);
+
     setRecruiterMessageTime(
       getCurrentTime()
     );
@@ -881,53 +905,61 @@ export function ChatWindow({
     onComplete();
 
     /*
-     * On mobile this closes the keyboard.
+     * Mobile keyboard closes after send.
      */
     inputRef.current?.blur();
 
     userScrolledAwayRef.current =
       false;
   };
+
+  /*
+   * Global Enter shortcut.
+   *
+   * Kept from the working implementation so
+   * Enter reliably sends even with the visual
+   * / invisible composer architecture.
+   */
   useEffect(() => {
-  const handleEnterToSend = (
-    event: KeyboardEvent
-  ) => {
-    if (event.key !== "Enter") {
-      return;
-    }
+    const handleEnterToSend = (
+      event: KeyboardEvent
+    ) => {
+      if (event.key !== "Enter") {
+        return;
+      }
 
-    if (event.isComposing) {
-      return;
-    }
+      if (event.isComposing) {
+        return;
+      }
 
-    if (!promptReady) {
-      return;
-    }
+      if (!promptReady) {
+        return;
+      }
 
-    if (recruiterMessageSent) {
-      return;
-    }
+      if (recruiterMessageSent) {
+        return;
+      }
 
-    event.preventDefault();
+      event.preventDefault();
 
-    handleRecruiterSend();
-  };
+      handleRecruiterSend();
+    };
 
-  window.addEventListener(
-    "keydown",
-    handleEnterToSend
-  );
-
-  return () => {
-    window.removeEventListener(
+    window.addEventListener(
       "keydown",
       handleEnterToSend
     );
-  };
-}, [
-  promptReady,
-  recruiterMessageSent,
-]);
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        handleEnterToSend
+      );
+    };
+  }, [
+    promptReady,
+    recruiterMessageSent,
+  ]);
 
   const icons = {
     email: <Mail size={20} />,
@@ -1144,14 +1176,7 @@ export function ChatWindow({
           </div>
         )}
 
-        {/*
-         * Manroop = LEFT / INCOMING
-         *
-         * Existing message content/type is
-         * preserved. Only the visual sender is
-         * normalized because the recruiter is
-         * now represented by the scripted prompt.
-         */}
+        {/* Manroop = LEFT / INCOMING */}
         {conversationMessages
           .slice(
             0,
@@ -1192,7 +1217,7 @@ export function ChatWindow({
           </div>
         )}
 
-        {/* Selected project details = Manroop / LEFT */}
+        {/* Selected project details */}
         {selectedProject && (
           <div ref={projectStartRef}>
             {selectedProject.sections.map(
@@ -1228,58 +1253,68 @@ export function ChatWindow({
 
       {/* ================= COMPOSER ================= */}
 
-      {/* ================= COMPOSER ================= */}
+      <div className="relative shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
+        {/* MOBILE ONE-TIME HINT */}
+        {showMobileHint && (
+          <div
+            className="
+              absolute bottom-[64px] left-1/2 z-[100]
+              -translate-x-1/2
+              whitespace-nowrap
+              rounded-lg
+              bg-[#202C33]
+              px-3.5 py-2.5
+              font-mono
+              text-[12px] font-medium
+              text-white
+              shadow-xl
+              md:hidden
+            "
+          >
+            <span>
+              {mobileHintText}
+            </span>
 
-<div className="relative shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
+            <span className="ml-[2px] inline-block animate-pulse">
+              |
+            </span>
 
-  {showMobileHint && (
-    <div
-      className="
-        absolute bottom-[62px] left-1/2 z-50
-        -translate-x-1/2
-        whitespace-nowrap
-        rounded-lg
-        bg-[#202C33]
-        px-3 py-2
-        font-mono text-[12px] font-medium
-        text-white
-        shadow-lg
-        md:hidden
-        animate-pulse
-      "
-    >
-      Tap the message bar to start typing ↓
+            <span className="ml-1">
+              ↓
+            </span>
 
-      <span
-        className="
-          absolute left-1/2 top-full
-          -translate-x-1/2
-          border-x-[6px] border-t-[6px]
-          border-x-transparent
-          border-t-[#202C33]
-        "
-      />
-    </div>
-  )}
+            <span
+              className="
+                absolute left-1/2 top-full
+                -translate-x-1/2
+                border-x-[7px]
+                border-t-[7px]
+                border-x-transparent
+                border-t-[#202C33]
+              "
+            />
+          </div>
+        )}
 
-  <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
+        <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
           <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] px-4">
             {/*
-             * Real invisible input:
-             * needed for native mobile keyboard.
+             * Real invisible input.
+             * Required for native mobile keyboard.
              */}
-          <input
-  ref={inputRef}
-  type="text"
-  onFocus={handleComposerFocus}
-
-  inputMode="text"
-  autoComplete="off"
-  autoCorrect="off"
-  spellCheck={false}
-  aria-label={`${currentChat.title} recruiter message`}
-  className="absolute inset-0 z-10 h-full w-full bg-transparent px-4 text-transparent caret-transparent outline-none"
-/>
+            <input
+              ref={inputRef}
+              type="text"
+              onFocus={
+                handleComposerFocus
+              }
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-label={`${currentChat.title} recruiter message`}
+              className="absolute inset-0 z-10 h-full w-full bg-transparent px-4 text-transparent caret-transparent outline-none"
+            />
 
             {/* Visual text + visual caret */}
             <div
