@@ -201,11 +201,9 @@ export function ProfileScreen({
 
             {/* Resume */}
             <a
-              href="/resume/Manroop_Kaur_Resume.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-4 rounded-xl px-3 py-3 transition hover:bg-[var(--wa-hover-bg)]"
-            >
+  href="/resume/Manroop_Kaur_Resume.pdf"
+  className="flex items-center gap-4 rounded-xl px-3 py-3 transition hover:bg-[var(--wa-hover-bg)]"
+>
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--wa-hover-bg)] text-[var(--wa-green)]">
                 <FileText size={20} />
               </div>
