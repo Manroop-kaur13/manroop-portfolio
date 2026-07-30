@@ -367,41 +367,16 @@ useEffect(() => {
     "(max-width: 767px)"
   ).matches;
 
-  if (!isMobile) {
-    return;
-  }
+  if (!isMobile) return;
 
-  const alreadyShown =
-    sessionStorage.getItem(
-      MOBILE_HINT_KEY
-    );
+  setShowMobileHint(true);
 
-  if (alreadyShown === "true") {
-    return;
-  }
-
-  /*
-   * Mark immediately so changing chats
-   * cannot show the guide again.
-   */
-  sessionStorage.setItem(
-    MOBILE_HINT_KEY,
-    "true"
-  );
-
-  const showTimer =
-    window.setTimeout(() => {
-      setShowMobileHint(true);
-    }, 300);
-
-  const hideTimer =
-    window.setTimeout(() => {
-      setShowMobileHint(false);
-    }, 3300);
+  const timer = window.setTimeout(() => {
+    setShowMobileHint(false);
+  }, 3000);
 
   return () => {
-    window.clearTimeout(showTimer);
-    window.clearTimeout(hideTimer);
+    window.clearTimeout(timer);
   };
 }, []);
 
@@ -1214,36 +1189,10 @@ useEffect(() => {
       <div className="relative shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
         {/* MOBILE ONE-TIME HINT */}
        {showMobileHint && (
-          <div
-            className="
-              absolute bottom-[64px] left-1/2 z-[100]
-              -translate-x-1/2
-              whitespace-nowrap
-              rounded-lg
-              bg-[#202C33]
-              px-3.5 py-2.5
-              font-mono
-              text-[12px] font-medium
-              text-white
-              shadow-xl
-              md:hidden
-              animate-[mobileHintFadeIn_250ms_ease-out]
-            "
-          >
-            Tap the message bar to start typing ↓
-
-            <span
-              className="
-                absolute left-1/2 top-full
-                -translate-x-1/2
-                border-x-[7px]
-                border-t-[7px]
-                border-x-transparent
-                border-t-[#202C33]
-              "
-            />
-          </div>
-        )}
+  <div className="absolute bottom-[64px] left-1/2 z-[100] -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#202C33] px-4 py-2.5 text-sm font-medium text-white shadow-xl md:hidden">
+    Tap the message bar to start typing ↓
+  </div>
+)}
 
         <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
           <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] pl-3 pr-4">
