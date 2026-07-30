@@ -1,6 +1,7 @@
 "use client";
-import { useTheme } from "next-themes";
+
 import Image from "next/image";
+import { useTheme } from "next-themes";
 
 import {
   useEffect,
@@ -10,24 +11,22 @@ import {
 } from "react";
 
 import {
+  ArrowLeft,
   FileText,
   Mail,
-  MoonStar,
+  Moon,
   MoreVertical,
+  Send,
+  Sun,
   UserRound,
 } from "lucide-react";
 
 import { SiLeetcode } from "react-icons/si";
+
 import {
   FaGithub,
   FaLinkedin,
 } from "react-icons/fa";
-import {
-  ArrowLeft,
-  Moon,
-  Sun,
-  // jo bhi baaki existing icons hain, unhe same rehne do
-} from "lucide-react";
 
 import { projects } from "@/data/projects";
 import { portfolio } from "@/data/portfolio";
@@ -41,80 +40,226 @@ interface Props {
   chat: ChatType;
   onBack: () => void;
   isReopening: boolean;
-  onFeatureSelect: (feature: FeatureType) => void;
+  isCompleted: boolean;
+  onComplete: () => void;
+  onFeatureSelect: (
+    feature: FeatureType
+  ) => void;
 }
 
-const chatAvatars: Record<ChatType, string> = {
+const chatAvatars: Record<
+  ChatType,
+  string
+> = {
   about: "/images/avatars/about.jpg",
-  education: "/images/avatars/education.jpg",
+  education:
+    "/images/avatars/education.jpg",
   skills: "/images/avatars/skills.jpeg",
-  projects: "/images/avatars/projects.jpg",
+  projects:
+    "/images/avatars/projects.jpg",
   experience:
     "/images/avatars/experience-avatar.jpg",
   achievements:
     "/images/avatars/achievements.jpg",
   certificates:
-    "/images/avatars/certificate.jpg",
+    "/images/avatars/certificates-new.jpg",
   resume: "/images/avatars/resume.jpg",
   contact: "/images/avatars/contact.jpeg",
 };
+
+const recruiterPrompts: Record<
+  ChatType,
+  string
+> = {
+  about: "Tell me about yourself!",
+  education:
+    "Tell me about your education.",
+  skills:
+    "What technologies do you work with?",
+  projects:
+    "Can you show me your projects?",
+  experience:
+    "What experience do you have?",
+  achievements:
+    "What are you most proud of?",
+  certificates:
+    "Can you show me your certifications?",
+  resume:
+    "Can I see your resume?",
+  contact:
+    "How can I reach you?",
+};
+
 function getCurrentTime() {
-  return new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  return new Date().toLocaleTimeString(
+    [],
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }
+  );
 }
 
 export function ChatWindow({
   chat,
   onBack,
   isReopening,
+  isCompleted,
+  onComplete,
   onFeatureSelect,
 }: Props) {
-  const { resolvedTheme, setTheme } = useTheme();
+  const {
+    resolvedTheme,
+    setTheme,
+  } = useTheme();
 
-  const isDark = resolvedTheme !== "light";
+  const isDark =
+    resolvedTheme !== "light";
 
   const toggleTheme = () => {
-    setTheme(isDark ? "light" : "dark");
+    setTheme(
+      isDark ? "light" : "dark"
+    );
   };
 
-  const currentChat = portfolio[chat];
+  const currentChat =
+    portfolio[chat];
+
+  const recruiterPrompt =
+    recruiterPrompts[chat];
+
+  /*
+   * IMPORTANT:
+   *
+   * portfolio.ts was written before the new
+   * recruiter composer interaction existed.
+   *
+   * Some chats therefore begin with an old
+   * recruiter-style opening question.
+   *
+   * The new scripted recruiter prompt replaces
+   * ONLY that old opening question.
+   *
+   * About and any chat that starts with "me"
+   * keeps all its existing content.
+   *
+   * Later messages are preserved as content,
+   * but visually the portfolio responses are
+   * rendered from Manroop's side.
+   */
+  const conversationMessages = useMemo(
+  () =>
+    portfolio[chat].messages.filter(
+      (message) =>
+        message.sender === "me"
+    ),
+  [chat]
+);
 
   const [menuOpen, setMenuOpen] =
     useState(false);
 
-  const [visibleMessages, setVisibleMessages] =
-    useState(0);
+  const [
+    visibleMessages,
+    setVisibleMessages,
+  ] = useState(0);
 
   const [isTyping, setIsTyping] =
     useState(false);
 
-  const [selectedProjectId, setSelectedProjectId] =
-    useState<string | null>(null);
+  const [
+    selectedProjectId,
+    setSelectedProjectId,
+  ] = useState<string | null>(
+    null
+  );
 
-  const [messageTimes, setMessageTimes] = useState<
+  const [
+    messageTimes,
+    setMessageTimes,
+  ] = useState<
     Record<number, string>
   >({});
 
-  const scrollContainerRef =
-    useRef<HTMLDivElement | null>(null);
+  const [
+    typedPrompt,
+    setTypedPrompt,
+  ] = useState("");
 
-  const projectStartRef =
-    useRef<HTMLDivElement | null>(null);
+  const [
+    recruiterMessageSent,
+    setRecruiterMessageSent,
+  ] = useState(false);
+
+  const [
+    recruiterMessageTime,
+    setRecruiterMessageTime,
+  ] = useState("");
+
+  const [
+    promptReady,
+    setPromptReady,
+  ] = useState(false);
+
+  const [
+    promptTypingStarted,
+    setPromptTypingStarted,
+  ] = useState(false);
 
   /*
-   * Once the user manually scrolls away from
-   * the bottom, automatic message scrolling stops.
+   * Snapshot whether the currently entered
+   * chat was already completed BEFORE this
+   * visit.
+   *
+   * When Send is pressed, parent isCompleted
+   * changes to true, but this ref intentionally
+   * remains false during this visit so that
+   * Manroop's replies can animate normally.
    */
-  const userScrolledAwayRef = useRef(false);
+  const completedOnEntryRef =
+    useRef(false);
+
+  const previousChatRef =
+    useRef<ChatType | null>(null);
+
+  if (
+    previousChatRef.current !== chat
+  ) {
+    previousChatRef.current = chat;
+
+    completedOnEntryRef.current =
+      isCompleted;
+  }
+
+  const restoreCompletedChat =
+    isReopening &&
+    completedOnEntryRef.current;
+
+  const scrollContainerRef =
+    useRef<HTMLDivElement | null>(
+      null
+    );
+
+  const projectStartRef =
+    useRef<HTMLDivElement | null>(
+      null
+    );
+
+  const inputRef =
+    useRef<HTMLInputElement | null>(
+      null
+    );
+
+  const userScrolledAwayRef =
+    useRef(false);
 
   const selectedProject = useMemo(
     () =>
       projects.find(
         (project) =>
-          project.id === selectedProjectId
+          project.id ===
+          selectedProjectId
       ),
     [selectedProjectId]
   );
@@ -122,9 +267,12 @@ export function ChatWindow({
   const scrollToBottom = (
     behavior: ScrollBehavior = "auto"
   ) => {
-    const container = scrollContainerRef.current;
+    const container =
+      scrollContainerRef.current;
 
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     container.scrollTo({
       top: container.scrollHeight,
@@ -132,14 +280,13 @@ export function ChatWindow({
     });
   };
 
-  /*
-   * Detect whether the user has moved away
-   * from the bottom of the conversation.
-   */
   const handleScroll = () => {
-    const container = scrollContainerRef.current;
+    const container =
+      scrollContainerRef.current;
 
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const distanceFromBottom =
       container.scrollHeight -
@@ -151,16 +298,212 @@ export function ChatWindow({
   };
 
   /*
-   * Reveal conversation.
+   * =====================================================
+   * INITIAL RECRUITER STATE
+   * =====================================================
+   *
+   * Completed reopen:
+   * recruiter prompt + all replies restored.
+   *
+   * Incomplete reopen:
+   * full recruiter prompt waits in composer.
+   *
+   * First desktop open:
+   * prompt begins typing automatically.
+   *
+   * First mobile open:
+   * waits for actual composer focus so the
+   * native keyboard can open naturally.
    */
   useEffect(() => {
+    if (restoreCompletedChat) {
+      setTypedPrompt(
+        recruiterPrompt
+      );
+
+      setPromptReady(true);
+      setPromptTypingStarted(false);
+
+      setRecruiterMessageSent(true);
+
+      setRecruiterMessageTime(
+        getCurrentTime()
+      );
+
+      return;
+    }
+
+    if (
+      isReopening &&
+      !completedOnEntryRef.current
+    ) {
+      setTypedPrompt(
+        recruiterPrompt
+      );
+
+      setPromptReady(true);
+      setPromptTypingStarted(false);
+
+      setRecruiterMessageSent(false);
+      setRecruiterMessageTime("");
+
+      return;
+    }
+
+    setTypedPrompt("");
+    setPromptReady(false);
+    setPromptTypingStarted(false);
+
+    setRecruiterMessageSent(false);
+    setRecruiterMessageTime("");
+
+    const isMobile =
+      window.matchMedia(
+        "(max-width: 767px)"
+      ).matches;
+
+    if (!isMobile) {
+      setPromptTypingStarted(true);
+    }
+  }, [
+    chat,
+    recruiterPrompt,
+    isReopening,
+    restoreCompletedChat,
+  ]);
+
+  /*
+   * =====================================================
+   * RECRUITER PROMPT TYPING
+   * =====================================================
+   */
+  useEffect(() => {
+    if (!promptTypingStarted) {
+      return;
+    }
+
+    if (isReopening) {
+      return;
+    }
+
+    if (completedOnEntryRef.current) {
+      return;
+    }
+
+    if (recruiterMessageSent) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const timers = new Set<
+      ReturnType<typeof setTimeout>
+    >();
+
+    const wait = (
+      duration: number
+    ) =>
+      new Promise<void>(
+        (resolve) => {
+          const timer = setTimeout(
+            () => {
+              timers.delete(timer);
+              resolve();
+            },
+            duration
+          );
+
+          timers.add(timer);
+        }
+      );
+
+    const typePrompt = async () => {
+      await wait(150);
+
+      if (cancelled) {
+        return;
+      }
+
+      for (
+        let index = 1;
+        index <=
+        recruiterPrompt.length;
+        index += 1
+      ) {
+        if (cancelled) {
+          return;
+        }
+
+        setTypedPrompt(
+          recruiterPrompt.slice(
+            0,
+            index
+          )
+        );
+
+        const character =
+          recruiterPrompt[
+            index - 1
+          ];
+
+        const isPunctuation =
+          character === "." ||
+          character === "?" ||
+          character === "!";
+
+        const delay =
+          isPunctuation
+            ? 100
+            : character === " "
+              ? 75
+              : index % 4 === 0
+                ? 60
+                : 42;
+
+        await wait(delay);
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      setPromptReady(true);
+    };
+
+    void typePrompt();
+
+    return () => {
+      cancelled = true;
+
+      timers.forEach((timer) => {
+        clearTimeout(timer);
+      });
+
+      timers.clear();
+    };
+  }, [
+    chat,
+    recruiterPrompt,
+    promptTypingStarted,
+    isReopening,
+    recruiterMessageSent,
+  ]);
+
+  /*
+   * =====================================================
+   * MANROOP'S RESPONSES
+   * =====================================================
+   */
+  useEffect(() => {
+    const messages =
+      conversationMessages;
+
     setSelectedProjectId(null);
     setMenuOpen(false);
     setIsTyping(false);
 
-    userScrolledAwayRef.current = false;
-
-    const messages = currentChat.messages;
+    userScrolledAwayRef.current =
+      false;
 
     if (messages.length === 0) {
       setVisibleMessages(0);
@@ -168,185 +511,397 @@ export function ChatWindow({
       return;
     }
 
-    if (isReopening) {
-      setVisibleMessages(messages.length);
+    /*
+     * Completed before entering:
+     * restore everything immediately.
+     */
+    if (restoreCompletedChat) {
+      setVisibleMessages(
+        messages.length
+      );
+
+      setMessageTimes({});
+
       return;
     }
 
-    setVisibleMessages(0);
-    setMessageTimes({});
+    /*
+     * Nothing from Manroop appears until
+     * recruiter actually presses Send.
+     */
+    if (!recruiterMessageSent) {
+      setVisibleMessages(0);
+      setMessageTimes({});
+      return;
+    }
 
     let cancelled = false;
-    let timeoutId:
-      | ReturnType<typeof setTimeout>
-      | undefined;
 
-    const wait = (duration: number) =>
-      new Promise<void>((resolve) => {
-        timeoutId = setTimeout(
-          resolve,
-          duration
-        );
-      });
+    const timers = new Set<
+      ReturnType<typeof setTimeout>
+    >();
 
-    const revealConversation = async () => {
-      await wait(450);
+    const wait = (
+      duration: number
+    ) =>
+      new Promise<void>(
+        (resolve) => {
+          const timer = setTimeout(
+            () => {
+              timers.delete(timer);
+              resolve();
+            },
+            duration
+          );
 
-      for (
-        let index = 0;
-        index < messages.length;
-        index += 1
-      ) {
-        if (cancelled) return;
+          timers.add(timer);
+        }
+      );
 
-        const message = messages[index];
+    const revealMessages =
+      async () => {
+        await wait(500);
 
-        if (message.sender === "other") {
+        for (
+          let index = 0;
+          index < messages.length;
+          index += 1
+        ) {
+          if (cancelled) {
+            return;
+          }
+
+          /*
+           * Manroop is replying, so typing
+           * indicator belongs to the incoming
+           * side.
+           */
           setIsTyping(true);
 
-          await wait(1000);
+          await wait(
+            index === 0
+              ? 1100
+              : 800
+          );
 
-          if (cancelled) return;
+          if (cancelled) {
+            return;
+          }
 
           setIsTyping(false);
-        } else {
-          await wait(700);
 
-          if (cancelled) return;
+          await wait(140);
+
+          if (cancelled) {
+            return;
+          }
+
+          const message =
+            messages[index];
+
+          setMessageTimes(
+            (prev) => ({
+              ...prev,
+              [message.id]:
+                getCurrentTime(),
+            })
+          );
+
+          setVisibleMessages(
+            index + 1
+          );
+
+          await wait(650);
         }
+      };
 
-        setMessageTimes((prev) => ({
-          ...prev,
-          [message.id]: getCurrentTime(),
-        }));
-
-        setVisibleMessages(index + 1);
-
-        await wait(300);
-      }
-    };
-
-    void revealConversation();
+    void revealMessages();
 
     return () => {
       cancelled = true;
+      setIsTyping(false);
 
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      timers.forEach((timer) => {
+        clearTimeout(timer);
+      });
+
+      timers.clear();
     };
   }, [
     chat,
-    currentChat.messages,
-    isReopening,
+    conversationMessages,
+    restoreCompletedChat,
+    recruiterMessageSent,
   ]);
 
   /*
-   * Auto-scroll while messages reveal, but
-   * only while the user remains near bottom.
-   *
-   * We scroll the chat container itself rather
-   * than using scrollIntoView(), which can move
-   * outer page/viewport on mobile Safari.
+   * Auto-scroll when messages appear.
    */
   useEffect(() => {
-    if (visibleMessages === 0) return;
+    if (
+      visibleMessages === 0
+    ) {
+      return;
+    }
 
-    if (userScrolledAwayRef.current) return;
+    if (
+      userScrolledAwayRef.current
+    ) {
+      return;
+    }
 
-    const timeout = setTimeout(() => {
-      scrollToBottom(
-        isReopening ? "auto" : "smooth"
-      );
-    }, isReopening ? 0 : 80);
+    const timeout = setTimeout(
+      () => {
+        scrollToBottom(
+          restoreCompletedChat
+            ? "auto"
+            : "smooth"
+        );
+      },
+      restoreCompletedChat
+        ? 0
+        : 80
+    );
 
-    return () => clearTimeout(timeout);
-  }, [visibleMessages, isReopening]);
+    return () =>
+      clearTimeout(timeout);
+  }, [
+    visibleMessages,
+    restoreCompletedChat,
+  ]);
 
   /*
-   * Keep typing bubble visible only when
-   * the user is already near the bottom.
+   * Keep Manroop typing indicator visible.
    */
   useEffect(() => {
-    if (!isTyping) return;
+    if (!isTyping) {
+      return;
+    }
 
-    if (userScrolledAwayRef.current) return;
+    if (
+      userScrolledAwayRef.current
+    ) {
+      return;
+    }
 
-    const timeout = setTimeout(() => {
-      scrollToBottom("smooth");
-    }, 50);
+    const timeout = setTimeout(
+      () => {
+        scrollToBottom("smooth");
+      },
+      50
+    );
 
-    return () => clearTimeout(timeout);
+    return () =>
+      clearTimeout(timeout);
   }, [isTyping]);
 
   /*
-   * Reopened chats start at the bottom once.
+   * Scroll after recruiter sends.
    */
   useEffect(() => {
-    if (!isReopening) return;
+    if (!recruiterMessageSent) {
+      return;
+    }
 
-    userScrolledAwayRef.current = false;
+    userScrolledAwayRef.current =
+      false;
 
-    const timeout = setTimeout(() => {
-      scrollToBottom("auto");
-    }, 50);
+    const timeout = setTimeout(
+      () => {
+        scrollToBottom(
+          restoreCompletedChat
+            ? "auto"
+            : "smooth"
+        );
+      },
+      restoreCompletedChat
+        ? 0
+        : 80
+    );
 
-    return () => clearTimeout(timeout);
-  }, [chat, isReopening]);
+    return () =>
+      clearTimeout(timeout);
+  }, [
+    recruiterMessageSent,
+    restoreCompletedChat,
+  ]);
 
   /*
-   * Project selected:
-   * scroll inside the messages container,
-   * not the browser viewport.
+   * Completed reopen begins at bottom.
    */
   useEffect(() => {
-    if (!selectedProjectId) return;
+    if (!restoreCompletedChat) {
+      return;
+    }
 
-    const timeout = setTimeout(() => {
-      const container =
-        scrollContainerRef.current;
+    userScrolledAwayRef.current =
+      false;
 
-      const projectElement =
-        projectStartRef.current;
+    const timeout = setTimeout(
+      () => {
+        scrollToBottom("auto");
+      },
+      50
+    );
 
-      if (!container || !projectElement) {
-        return;
-      }
+    return () =>
+      clearTimeout(timeout);
+  }, [
+    chat,
+    restoreCompletedChat,
+  ]);
 
-      const containerRect =
-        container.getBoundingClientRect();
+  /*
+   * Scroll selected project into view.
+   */
+  useEffect(() => {
+    if (!selectedProjectId) {
+      return;
+    }
 
-      const projectRect =
-        projectElement.getBoundingClientRect();
+    const timeout = setTimeout(
+      () => {
+        const container =
+          scrollContainerRef.current;
 
-      const targetTop =
-        container.scrollTop +
-        projectRect.top -
-        containerRect.top -
-        16;
+        const projectElement =
+          projectStartRef.current;
 
-      container.scrollTo({
-        top: targetTop,
-        behavior: "smooth",
-      });
-    }, 150);
+        if (
+          !container ||
+          !projectElement
+        ) {
+          return;
+        }
 
-    return () => clearTimeout(timeout);
+        const containerRect =
+          container.getBoundingClientRect();
+
+        const projectRect =
+          projectElement.getBoundingClientRect();
+
+        const targetTop =
+          container.scrollTop +
+          projectRect.top -
+          containerRect.top -
+          16;
+
+        container.scrollTo({
+          top: targetTop,
+          behavior: "smooth",
+        });
+      },
+      150
+    );
+
+    return () =>
+      clearTimeout(timeout);
   }, [selectedProjectId]);
+
+  /*
+   * Mobile:
+   * genuine focus starts scripted typing.
+   */
+  const handleComposerFocus = () => {
+    if (recruiterMessageSent) {
+      return;
+    }
+
+    if (isReopening) {
+      return;
+    }
+
+    if (promptTypingStarted) {
+      return;
+    }
+
+    setPromptTypingStarted(true);
+  };
+
+  /*
+   * Send via button OR Enter.
+   */
+  const handleRecruiterSend = () => {
+    if (!promptReady) {
+      return;
+    }
+
+    if (recruiterMessageSent) {
+      return;
+    }
+
+    setRecruiterMessageTime(
+      getCurrentTime()
+    );
+
+    setRecruiterMessageSent(true);
+
+    onComplete();
+
+    /*
+     * On mobile this closes the keyboard.
+     */
+    inputRef.current?.blur();
+
+    userScrolledAwayRef.current =
+      false;
+  };
+  useEffect(() => {
+  const handleEnterToSend = (
+    event: KeyboardEvent
+  ) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    if (event.isComposing) {
+      return;
+    }
+
+    if (!promptReady) {
+      return;
+    }
+
+    if (recruiterMessageSent) {
+      return;
+    }
+
+    event.preventDefault();
+
+    handleRecruiterSend();
+  };
+
+  window.addEventListener(
+    "keydown",
+    handleEnterToSend
+  );
+
+  return () => {
+    window.removeEventListener(
+      "keydown",
+      handleEnterToSend
+    );
+  };
+}, [
+  promptReady,
+  recruiterMessageSent,
+]);
 
   const icons = {
     email: <Mail size={20} />,
     github: <FaGithub size={20} />,
-    linkedin: <FaLinkedin size={20} />,
-    leetcode: <SiLeetcode size={20} />,
+    linkedin:
+      <FaLinkedin size={20} />,
+    leetcode:
+      <SiLeetcode size={20} />,
   };
 
   return (
     <main className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--wa-chat-bg)]">
-      {/* Header */}
+      {/* ================= HEADER ================= */}
+
       <header className="flex shrink-0 items-center justify-between border-b border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-3 py-3 sm:px-5">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
-          {/* Mobile Back */}
           <button
             type="button"
             onClick={onBack}
@@ -356,7 +911,6 @@ export function ChatWindow({
             <ArrowLeft size={22} />
           </button>
 
-          {/* Avatar */}
           <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[var(--wa-search-bg)] sm:h-11 sm:w-11">
             <Image
               src={chatAvatars[chat]}
@@ -368,7 +922,6 @@ export function ChatWindow({
             />
           </div>
 
-          {/* Chat Info */}
           <div className="min-w-0 flex-1">
             <h2 className="truncate font-semibold text-[var(--wa-text-primary)]">
               {currentChat.title}
@@ -388,36 +941,35 @@ export function ChatWindow({
           </div>
         </div>
 
-        {/* Header Actions */}
         <div className="ml-1 flex shrink-0 items-center gap-0.5">
-          {/* Mobile Theme */}
-         <button
-  type="button"
-  onClick={toggleTheme}
-  aria-label={
-    isDark
-      ? "Switch to light theme"
-      : "Switch to dark theme"
-  }
-  title={
-    isDark
-      ? "Light Mode"
-      : "Dark Mode"
-  }
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={
+              isDark
+                ? "Switch to light theme"
+                : "Switch to dark theme"
+            }
+            title={
+              isDark
+                ? "Light Mode"
+                : "Dark Mode"
+            }
             className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)] md:hidden"
           >
             {isDark ? (
-  <Sun size={19} />
-) : (
-  <Moon size={19} />
-)}
+              <Sun size={19} />
+            ) : (
+              <Moon size={19} />
+            )}
           </button>
 
-          {/* Mobile Profile */}
           <button
             type="button"
             onClick={() =>
-              onFeatureSelect("profile")
+              onFeatureSelect(
+                "profile"
+              )
             }
             aria-label="Profile"
             title="Profile"
@@ -426,12 +978,13 @@ export function ChatWindow({
             <UserRound size={19} />
           </button>
 
-          {/* More Menu */}
           <div className="relative">
             <button
               type="button"
               onClick={() =>
-                setMenuOpen((prev) => !prev)
+                setMenuOpen(
+                  (prev) => !prev
+                )
               }
               className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--wa-text-primary)] transition hover:bg-[var(--wa-hover-bg)]"
               aria-label="More options"
@@ -498,55 +1051,95 @@ export function ChatWindow({
         </div>
       </header>
 
-      {/* Messages */}
+      {/* ================= MESSAGES ================= */}
+
       <div
         ref={scrollContainerRef}
         data-chat-scroll
         onScroll={handleScroll}
         className="chat-wallpaper min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5 sm:px-6 sm:py-6"
       >
-        {/* Today */}
         <div className="mb-6 flex justify-center sm:mb-8">
           <span className="rounded-lg bg-[var(--wa-system-message-bg)] px-3 py-1 text-xs text-[var(--wa-text-secondary)] shadow-sm">
             Today
           </span>
         </div>
 
-        {/* About unread divider */}
-        {chat === "about" &&
-          !isReopening && (
+        {!recruiterMessageSent &&
+          !completedOnEntryRef.current && (
             <div className="mb-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-[var(--wa-border)]" />
 
               <span className="whitespace-nowrap text-xs font-medium text-[var(--wa-green)] sm:text-sm">
-                {currentChat.messages.length} unread
-                messages
+                Start a conversation
               </span>
 
               <div className="h-px flex-1 bg-[var(--wa-border)]" />
             </div>
           )}
 
-        {/* Messages */}
-        {currentChat.messages
-          .slice(0, visibleMessages)
-          .map((message) => (
-            <MessageRenderer
-              key={message.id}
-              message={{
-                ...message,
-                time:
-                  messageTimes[message.id] ??
-                  message.time,
-              }}
-              icons={icons}
-              onProjectSelect={
-                setSelectedProjectId
-              }
-            />
-          ))}
+        {/* Recruiter = RIGHT / GREEN */}
+        {recruiterMessageSent && (
+          <div className="mb-3 flex justify-end">
+            <div className="max-w-[85%] rounded-lg rounded-tr-sm bg-[var(--wa-bubble-me)] px-3 py-2 shadow-sm sm:max-w-[72%]">
+              <div className="flex items-end gap-2">
+                <p className="min-w-0 text-[14px] leading-5 text-[var(--wa-text-primary)] sm:text-[15px]">
+                  {recruiterPrompt}
+                </p>
 
-        {/* Typing */}
+                <div className="ml-1 flex shrink-0 items-center gap-1 self-end whitespace-nowrap text-[10px] text-[var(--wa-text-secondary)]">
+                  <span>
+                    {recruiterMessageTime ||
+                      getCurrentTime()}
+                  </span>
+
+                  <span className="text-[#53BDEB]">
+                    ✓✓
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/*
+         * Manroop = LEFT / INCOMING
+         *
+         * Existing message content/type is
+         * preserved. Only the visual sender is
+         * normalized because the recruiter is
+         * now represented by the scripted prompt.
+         */}
+        {conversationMessages
+          .slice(
+            0,
+            visibleMessages
+          )
+          .map((message) => {
+            const renderedMessage = {
+              ...message,
+              sender:
+                "other" as const,
+              time:
+                messageTimes[
+                  message.id
+                ] ??
+                message.time,
+            };
+
+            return (
+              <MessageRenderer
+                key={message.id}
+                message={renderedMessage}
+                icons={icons}
+                onProjectSelect={
+                  setSelectedProjectId
+                }
+              />
+            );
+          })}
+
+        {/* Manroop typing = LEFT */}
         {isTyping && (
           <div className="mb-3 flex justify-start">
             <div className="flex h-9 items-center gap-1 rounded-lg rounded-tl-sm bg-[var(--wa-bubble-other)] px-4 shadow-sm">
@@ -557,18 +1150,22 @@ export function ChatWindow({
           </div>
         )}
 
-        {/* Selected Project */}
+        {/* Selected project details = Manroop / LEFT */}
         {selectedProject && (
           <div ref={projectStartRef}>
             {selectedProject.sections.map(
-              (section, index) => (
+              (
+                section,
+                index
+              ) => (
                 <MessageRenderer
                   key={`${selectedProject.id}-${index}`}
                   message={{
                     id: index,
                     type: "project-section",
-                    sender: "me",
-                    time: getCurrentTime(),
+                    sender: "other",
+                    time:
+                      getCurrentTime(),
                     section,
                   }}
                   icons={icons}
@@ -585,6 +1182,97 @@ export function ChatWindow({
           className="h-1"
           aria-hidden="true"
         />
+      </div>
+
+      {/* ================= COMPOSER ================= */}
+
+      <div className="shrink-0 border-t border-[var(--wa-border)] bg-[var(--wa-header-bg)] px-2 py-2 sm:px-3">
+        <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
+          <div className="relative flex min-h-11 min-w-0 flex-1 items-center rounded-[22px] bg-[var(--wa-search-bg)] px-4">
+            {/*
+             * Real invisible input:
+             * needed for native mobile keyboard.
+             */}
+          <input
+  ref={inputRef}
+  type="text"
+  onFocus={handleComposerFocus}
+
+  inputMode="text"
+  autoComplete="off"
+  autoCorrect="off"
+  spellCheck={false}
+  aria-label={`${currentChat.title} recruiter message`}
+  className="absolute inset-0 z-10 h-full w-full bg-transparent px-4 text-transparent caret-transparent outline-none"
+/>
+
+            {/* Visual text + visual caret */}
+            <div
+              className="pointer-events-none flex min-w-0 items-center text-[16px]"
+              aria-hidden="true"
+            >
+              {recruiterMessageSent ? (
+                <>
+                  {/* | Message */}
+                  <span className="mr-[2px] inline-block h-[19px] w-[1.5px] animate-pulse bg-[var(--wa-text-primary)]" />
+
+                  <span className="text-[var(--wa-text-secondary)]">
+                    Message
+                  </span>
+                </>
+              ) : typedPrompt ? (
+                <>
+                  <span className="text-[var(--wa-text-primary)]">
+                    {typedPrompt}
+                  </span>
+
+                  {/* Prompt| */}
+                  <span className="ml-[1px] inline-block h-[19px] w-[1.5px] animate-pulse bg-[var(--wa-text-primary)]" />
+                </>
+              ) : (
+                <>
+                  <span className="text-[var(--wa-text-secondary)]">
+                    Message
+                  </span>
+
+                  {promptTypingStarted && (
+                    <span className="ml-[1px] inline-block h-[19px] w-[1.5px] animate-pulse bg-[var(--wa-text-primary)]" />
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              handleRecruiterSend
+            }
+            disabled={
+              !promptReady ||
+              recruiterMessageSent
+            }
+            aria-label="Send message"
+            title={
+              recruiterMessageSent
+                ? "Message sent"
+                : promptReady
+                  ? "Send"
+                  : "Typing..."
+            }
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
+              promptReady &&
+              !recruiterMessageSent
+                ? "bg-[var(--wa-green)] text-white hover:brightness-105 active:scale-95"
+                : "cursor-default bg-[var(--wa-green)]/40 text-white/60"
+            }`}
+          >
+            <Send
+              size={19}
+              className="-translate-x-[1px] rotate-45"
+            />
+          </button>
+        </div>
       </div>
     </main>
   );

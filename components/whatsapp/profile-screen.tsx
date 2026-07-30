@@ -88,7 +88,7 @@ export function ProfileScreen({
           </p>
 
           <p className="mt-3 text-[15px] font-medium text-[var(--wa-text-primary)]">
-            God bless me ✨
+            Somewhere between an idea and a commit.
           </p>
         </section>
 

@@ -46,7 +46,7 @@ const chats: {
   {
     id: "projects",
     title: "Projects",
-    preview: "Driver Safety AI & more...",
+    preview: "DriveSafeAI & more...",
     avatar: "/images/avatars/projects.jpg",
   },
   {
@@ -65,7 +65,7 @@ const chats: {
     id: "certificates",
     title: "Certificates",
     preview: "View all certifications",
-    avatar: "/images/avatars/certificate.jpg",
+    avatar: "/images/avatars/certificates-new.jpg",
   },
   {
     id: "resume",
@@ -143,9 +143,7 @@ export function Sidebar({
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) =>
-              setSearchQuery(e.target.value)
-            }
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search"
             aria-label="Search chats"
             className="min-w-0 w-full bg-transparent text-base text-[var(--wa-text-primary)] outline-none placeholder:text-[var(--wa-text-secondary)]"
@@ -168,8 +166,7 @@ export function Sidebar({
       <div className="flex-1 overflow-y-auto">
         {filteredChats.map((chat) => {
           const isAboutUnread =
-            chat.id === "about" &&
-            !openedTimes.about;
+            chat.id === "about" && !openedTimes.about;
 
           return (
             <button
@@ -206,15 +203,9 @@ export function Sidebar({
                     {chat.title}
                   </h3>
 
-                  {isAboutUnread ? (
-                    <span className="shrink-0 text-xs font-medium text-[var(--wa-green)]">
-                      New
-                    </span>
-                  ) : (
-                    <span className="shrink-0 text-xs text-[var(--wa-text-secondary)]">
-                      {openedTimes[chat.id] ?? ""}
-                    </span>
-                  )}
+                  <span className="shrink-0 text-xs text-[var(--wa-text-secondary)]">
+                    {openedTimes[chat.id] ?? ""}
+                  </span>
                 </div>
 
                 <div className="mt-1 flex items-center justify-between gap-3">
@@ -227,12 +218,6 @@ export function Sidebar({
                   >
                     {chat.preview}
                   </p>
-
-                  {isAboutUnread && (
-                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#25D366] px-1.5 text-[11px] font-bold text-[#111B21]">
-                      7
-                    </span>
-                  )}
                 </div>
               </div>
             </button>

@@ -174,8 +174,8 @@ export const portfolio: Record<ChatType, ChatData> = {
       sender: "me",
       type: "text",
       text:
-        "Thank you! 😊 I've always believed in maintaining strong academics while actively working on real-world projects, research, and technical communities.",
-      time: "10:34 AM",
+        "Thank you! 😊 ",
+        time: "10:34 AM",
     },
   ],
 },
@@ -215,6 +215,7 @@ export const portfolio: Record<ChatType, ChatData> = {
       "JavaScript",
       "SQL",
       "HTML5",
+      "TypeScript",
       "CSS3",
     ],
     time: "10:31 AM",
@@ -489,7 +490,7 @@ experience: {
     id: 2,
     type: "text",
     sender: "me",
-    text: "Yes! Here are some of the highlights from my journey 😊",
+    text: "Here are a few highlights I'm proud of! 🏆",
     time: "11:00 PM",
   },
 
@@ -575,12 +576,12 @@ experience: {
       time: "11:15 PM",
     },
 
-    {
-      id: 2,
-      type: "certificate-gallery",
-      sender: "me",
-      time: "11:15 PM",
-    },
+   {
+  id: 2,
+  type: "certificate-gallery",
+  sender: "me",
+  time: "11:15 PM",
+},
 
     {
       id: 3,

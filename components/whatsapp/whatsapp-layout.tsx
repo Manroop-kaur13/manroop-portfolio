@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -36,6 +37,17 @@ export function WhatsAppLayout() {
   const [mobileChatOpen, setMobileChatOpen] =
     useState(false);
 
+  /*
+   * Tracks when a chat was FIRST opened.
+   *
+   * Used for:
+   * - recent chat ordering
+   * - timestamps in sidebar
+   *
+   * IMPORTANT:
+   * Opening a chat does NOT mean its
+   * interaction has been completed.
+   */
   const [openedTimes, setOpenedTimes] = useState<
     Partial<Record<ChatType, string>>
   >({});
@@ -43,12 +55,37 @@ export function WhatsAppLayout() {
   const [recentChats, setRecentChats] =
     useState<ChatType[]>([]);
 
+  /*
+   * Tracks whether the chat has been opened
+   * before.
+   *
+   * This is separate from completedChats.
+   */
   const [isReopeningChat, setIsReopeningChat] =
     useState(false);
+
+  /*
+   * NEW:
+   *
+   * A chat becomes completed only when its
+   * recruiter interaction is actually sent/
+   * completed.
+   *
+   * Therefore:
+   *
+   * openedTimes.about = true
+   * does NOT automatically mean
+   * completedChats.about = true.
+   */
+  const [completedChats, setCompletedChats] =
+    useState<
+      Partial<Record<ChatType, boolean>>
+    >({});
 
   const [activeFeature, setActiveFeature] =
     useState<FeatureType | null>(null);
 
+  const historyInitialized = useRef(false);
 
   const isMobile = useCallback(() => {
     if (typeof window === "undefined") {
@@ -61,12 +98,36 @@ export function WhatsAppLayout() {
   }, []);
 
   /*
-   * The workspace history entry is created by
-   * app/page.tsx when Accept Invitation is pressed.
+   * Workspace history entry is created by
+   * app/page.tsx when Accept Invitation
+   * is pressed.
    *
-   * Here we only make sure that the current
-   * workspace entry is labelled as the chat list.
+   * Here we label that workspace entry as
+   * the chat list.
    */
+  useEffect(() => {
+    if (!isMobile()) {
+      return;
+    }
+
+    if (historyInitialized.current) {
+      return;
+    }
+
+    historyInitialized.current = true;
+
+    const currentState =
+      window.history.state ?? {};
+
+    window.history.replaceState(
+      {
+        ...currentState,
+        portfolioStage: "workspace",
+        portfolioView: "list",
+      },
+      ""
+    );
+  }, [isMobile]);
 
   /*
    * Browser Back / iPhone edge swipe.
@@ -83,8 +144,8 @@ export function WhatsAppLayout() {
         event.state as MobileViewState | null;
 
       /*
-       * app/page.tsx handles returning from
-       * workspace to the Invitation screen.
+       * app/page.tsx handles leaving the
+       * workspace and returning to Invitation.
        */
       if (
         !state ||
@@ -94,7 +155,7 @@ export function WhatsAppLayout() {
       }
 
       /*
-       * Chats list.
+       * Main Chats list.
        */
       if (state.portfolioView === "list") {
         setActiveFeature(null);
@@ -103,23 +164,30 @@ export function WhatsAppLayout() {
       }
 
       /*
-       * Chat.
+       * Restore chat.
        */
       if (state.portfolioView === "chat") {
         setActiveFeature(null);
         setSelectedChat(state.chat);
         setMobileChatOpen(true);
+
+        /*
+         * The chat has existed in history,
+         * therefore it has been opened before.
+         *
+         * Whether its conversation was completed
+         * is determined separately by
+         * completedChats.
+         */
         setIsReopeningChat(true);
 
         return;
       }
 
       /*
-       * Profile.
+       * Restore Profile/feature.
        */
-      if (
-        state.portfolioView === "feature"
-      ) {
+      if (state.portfolioView === "feature") {
         setMobileChatOpen(false);
         setActiveFeature(state.feature);
       }
@@ -148,6 +216,7 @@ export function WhatsAppLayout() {
       Boolean(openedTimes[chat]);
 
     setIsReopeningChat(alreadyOpened);
+
     setSelectedChat(chat);
     setActiveFeature(null);
 
@@ -176,6 +245,9 @@ export function WhatsAppLayout() {
       }));
     }
 
+    /*
+     * Mobile browser history.
+     */
     if (isMobile()) {
       const state: MobileViewState = {
         portfolioStage: "workspace",
@@ -193,10 +265,31 @@ export function WhatsAppLayout() {
   };
 
   /*
-   * Profile.
+   * NEW:
    *
-   * Theme is NOT handled here anymore.
-   * FeatureNav toggles it directly.
+   * Called by ChatWindow when the recruiter
+   * has actually completed/sent the interaction.
+   */
+  const handleChatComplete = (
+    chat: ChatType
+  ) => {
+    setCompletedChats((prev) => {
+      if (prev[chat]) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [chat]: true,
+      };
+    });
+  };
+
+  /*
+   * Profile / features.
+   *
+   * Theme continues to toggle directly
+   * through FeatureNav / ChatWindow.
    */
   const handleFeatureSelect = (
     feature: FeatureType
@@ -219,7 +312,7 @@ export function WhatsAppLayout() {
   };
 
   /*
-   * Chat Back button.
+   * Chat header Back button.
    */
   const handleMobileChatBack = () => {
     if (isMobile()) {
@@ -242,6 +335,9 @@ export function WhatsAppLayout() {
     setActiveFeature(null);
   };
 
+  /*
+   * Shared sidebar.
+   */
   const sidebar = (
     <Sidebar
       selectedChat={selectedChat}
@@ -255,7 +351,7 @@ export function WhatsAppLayout() {
   );
 
   /*
-   * Desktop content.
+   * Desktop right-side content.
    */
   const desktopContent =
     activeFeature === "profile" ? (
@@ -267,6 +363,16 @@ export function WhatsAppLayout() {
         chat={selectedChat}
         onBack={() => {}}
         isReopening={isReopeningChat}
+        isCompleted={
+          Boolean(
+            completedChats[selectedChat]
+          )
+        }
+        onComplete={() =>
+          handleChatComplete(
+            selectedChat
+          )
+        }
         onFeatureSelect={
           handleFeatureSelect
         }
@@ -283,8 +389,7 @@ export function WhatsAppLayout() {
           </h2>
 
           <p className="mt-3 text-sm leading-6 text-[var(--wa-text-secondary)]">
-            Select a chat to start
-            exploring.
+            Select a chat to start exploring.
           </p>
         </div>
       </main>
@@ -292,14 +397,20 @@ export function WhatsAppLayout() {
 
   return (
     <div className="h-[100dvh] min-h-[100dvh] overflow-hidden bg-[var(--wa-app-bg)]">
-      {/* DESKTOP */}
+      {/* =========================
+          DESKTOP
+          ========================= */}
+
       <div className="hidden h-full md:flex">
         {sidebar}
 
         {desktopContent}
       </div>
 
-      {/* MOBILE */}
+      {/* =========================
+          MOBILE
+          ========================= */}
+
       <div className="h-full min-h-0 md:hidden">
         {activeFeature === "profile" ? (
           <ProfileScreen
@@ -314,6 +425,18 @@ export function WhatsAppLayout() {
             }
             isReopening={
               isReopeningChat
+            }
+            isCompleted={
+              Boolean(
+                completedChats[
+                  selectedChat
+                ]
+              )
+            }
+            onComplete={() =>
+              handleChatComplete(
+                selectedChat
+              )
             }
             onFeatureSelect={
               handleFeatureSelect
